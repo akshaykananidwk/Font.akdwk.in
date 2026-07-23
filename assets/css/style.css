@@ -58,11 +58,27 @@ code { background: var(--c-bg); border: 1px solid var(--c-border); padding: 2px 
   border-radius: 14px; padding: 18px; margin-top: 14px;
   box-shadow: 0 4px 18px rgba(15, 40, 70, .06);
 }
-.font-select-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.font-select-wrap { position: relative; flex: 1; min-width: 240px; max-width: 420px; }
+/* Pramukh-style: converter એક જ column, boxes ઉપર-નીચે */
+.converter-card { max-width: 640px; margin-left: auto; margin-right: auto; }
+.conv-box textarea { min-height: 165px; }
+
+/* દરેક box ની ઉપર selector + counter વાળી પટ્ટી */
+.conv-box-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; margin-bottom: 6px; font-weight: 600; font-size: .9rem; flex-wrap: wrap;
+}
+.box-selector { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.box-lang { color: var(--c-muted); font-weight: 600; white-space: nowrap; }
+.fmt-fixed {
+  background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 8px;
+  padding: 7px 12px; font-weight: 700; color: var(--c-primary);
+}
+
+/* ફોન્ટ selector (ઉપરના box માં, head ની અંદર) */
+.font-select-wrap { position: relative; flex: 1; min-width: 160px; max-width: 340px; }
 #fontSearch {
-  width: 100%; padding: 10px 12px; border: 1px solid var(--c-border);
-  border-radius: 8px; font-size: .95rem; background: var(--c-bg); color: var(--c-text);
+  width: 100%; padding: 8px 12px; border: 1px solid var(--c-border);
+  border-radius: 8px; font-size: .9rem; background: var(--c-bg); color: var(--c-text); font-weight: 700;
 }
 .font-dropdown {
   display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
@@ -75,8 +91,7 @@ code { background: var(--c-bg); border: 1px solid var(--c-border); padding: 2px 
 .fd-item:hover, .fd-item.active { background: var(--c-bg); color: var(--c-primary); }
 .fd-item.hidden { display: none; }
 
-.conv-box-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-weight: 600; font-size: .9rem; }
-.char-counter { font-weight: 400; font-size: .8rem; color: var(--c-muted); }
+.char-counter { font-weight: 400; font-size: .8rem; color: var(--c-muted); white-space: nowrap; }
 .char-counter.limit-near { color: var(--c-danger); font-weight: 700; }
 .conv-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .btn-sm {
@@ -85,11 +100,12 @@ code { background: var(--c-bg); border: 1px solid var(--c-border); padding: 2px 
 }
 .btn-sm:hover { border-color: var(--c-primary-2); color: var(--c-primary); }
 
-.convert-btns { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+/* બે box ની વચ્ચે, બે દિશાના કન્વર્ટ બટન */
+.convert-btns-mid { display: flex; gap: 12px; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
+.conv-dir { min-width: 190px; justify-content: center; font-size: 1rem; padding: 12px 22px; }
 .btn:hover { background: var(--c-primary-2); }
 .btn-secondary { background: var(--c-muted); }
 .btn-secondary:hover { background: var(--c-primary); }
-.btn-swap { padding: 10px 14px; background: var(--c-bg); color: var(--c-text); border: 1px solid var(--c-border); }
 .btn:disabled { opacity: .6; cursor: wait; }
 .btn-sm-h { display: inline-block; padding: 8px 16px; border-radius: 8px; border: 0; background: var(--c-primary); color: #fff; font-size: .85rem; cursor: pointer; text-decoration: none; }
 

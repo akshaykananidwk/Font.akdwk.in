@@ -20,60 +20,60 @@ $selectedSlug = $selectedSlug ?? '';
   <p class="intro"><?= $e($introText ?? '') ?></p>
 
   <section class="converter-card" aria-label="ફોન્ટ કન્વર્ટર">
-    <div class="font-select-row">
-      <label for="fontSearch"><strong>ફોન્ટ પસંદ કરો:</strong></label>
-      <div class="font-select-wrap">
-        <input type="text" id="fontSearch" placeholder="ફોન્ટ શોધો... (દા.ત. LMG)" autocomplete="off"
-               aria-label="ફોન્ટ શોધો" value="">
-        <input type="hidden" id="fontSlug" value="<?= $e($selectedSlug) ?>">
-        <div class="font-dropdown" id="fontDropdown" role="listbox">
-          <?php if ($popularFonts): ?>
-          <div class="fd-group">⭐ લોકપ્રિય</div>
-          <?php foreach ($popularFonts as $f): ?>
-            <div class="fd-item" role="option" data-slug="<?= $e($f['font_slug']) ?>" data-name="<?= $e($f['font_name']) ?>"><?= $e($f['font_name']) ?></div>
-          <?php endforeach; ?>
-          <?php endif; ?>
-          <div class="fd-group">બધા ફોન્ટ</div>
-          <?php foreach ($fonts as $f): ?>
-            <div class="fd-item" role="option" data-slug="<?= $e($f['font_slug']) ?>" data-name="<?= $e($f['font_name']) ?>"><?= $e($f['font_name']) ?></div>
-          <?php endforeach; ?>
+    <?php // hidden — JS ને દરેક box નો font slug + direction આપે છે ?>
+    <input type="hidden" id="fontSlug" value="<?= $e($selectedSlug ?: 'lmg') ?>">
+
+    <?php /* ---- Box 1 (ઉપર): Non-Unicode / Legacy font ---- */ ?>
+    <div class="conv-box">
+      <div class="conv-box-head">
+        <div class="box-selector font-select-wrap">
+          <span class="box-lang">ફોન્ટ:</span>
+          <input type="text" id="fontSearch" placeholder="ફોન્ટ પસંદ કરો... (દા.ત. LMG)" autocomplete="off"
+                 aria-label="ફોન્ટ પસંદ કરો" value="">
+          <div class="font-dropdown" id="fontDropdown" role="listbox">
+            <?php if ($popularFonts): ?>
+            <div class="fd-group">⭐ લોકપ્રિય</div>
+            <?php foreach ($popularFonts as $f): ?>
+              <div class="fd-item" role="option" data-slug="<?= $e($f['font_slug']) ?>" data-name="<?= $e($f['font_name']) ?>"><?= $e($f['font_name']) ?></div>
+            <?php endforeach; ?>
+            <?php endif; ?>
+            <div class="fd-group">બધા ફોન્ટ</div>
+            <?php foreach ($fonts as $f): ?>
+              <div class="fd-item" role="option" data-slug="<?= $e($f['font_slug']) ?>" data-name="<?= $e($f['font_name']) ?>"><?= $e($f['font_name']) ?></div>
+            <?php endforeach; ?>
+          </div>
         </div>
+        <span class="char-counter" id="counterLegacy">0 અક્ષર</span>
+      </div>
+      <textarea id="legacyText" dir="ltr" spellcheck="false"
+        placeholder="અહીં જૂના (legacy) ફોન્ટનો ટેક્સ્ટ લખો કે paste કરો..." aria-label="Legacy ટેક્સ્ટ"></textarea>
+      <div class="conv-actions">
+        <button class="btn-sm" data-copy="legacyText">📋 કૉપી</button>
+        <button class="btn-sm" data-clear="legacyText">✖ ક્લિયર</button>
       </div>
     </div>
 
-    <div class="converter-grid">
-      <div class="conv-box">
-        <div class="conv-box-head">
-          <span>Non-Unicode (Legacy)</span>
-          <span class="char-counter" id="counterLegacy">0 અક્ષર</span>
-        </div>
-        <textarea id="legacyText" dir="ltr" spellcheck="false"
-          placeholder="અહીં legacy ફોન્ટનો ટેક્સ્ટ paste કરો..." aria-label="Legacy ટેક્સ્ટ"></textarea>
-        <div class="conv-actions">
-          <button class="btn-sm" data-copy="legacyText">📋 કૉપી</button>
-          <button class="btn-sm" data-clear="legacyText">✖ ક્લિયર</button>
-        </div>
-      </div>
-
-      <div class="conv-box">
-        <div class="conv-box-head">
-          <span>Unicode (Shruti)</span>
-          <span class="char-counter" id="counterUnicode">0 અક્ષર</span>
-        </div>
-        <textarea id="unicodeText" dir="ltr" spellcheck="false" lang="gu"
-          placeholder="Unicode પરિણામ અહીં આવશે..." aria-label="Unicode ટેક્સ્ટ"></textarea>
-        <div class="conv-actions">
-          <button class="btn-sm" data-copy="unicodeText">📋 કૉપી</button>
-          <button class="btn-sm" data-clear="unicodeText">✖ ક્લિયર</button>
-          <button class="btn-sm" id="btnDownload">⬇ ડાઉનલોડ (.txt)</button>
-        </div>
-      </div>
+    <?php /* ---- વચ્ચે: બે દિશાના કન્વર્ટ બટન ---- */ ?>
+    <div class="convert-btns-mid">
+      <button class="btn conv-dir" id="btnToUnicode" title="ફોન્ટ → Unicode">↓ Unicode માં કન્વર્ટ</button>
+      <button class="btn conv-dir btn-secondary" id="btnToLegacy" title="Unicode → ફોન્ટ">↑ ફોન્ટમાં કન્વર્ટ</button>
     </div>
 
-    <div class="convert-btns">
-      <button class="btn" id="btnToUnicode">Unicode માં કન્વર્ટ →</button>
-      <button class="btn btn-swap" id="btnSwap" title="બન્ને બોક્સ અદલાબદલી">⇄</button>
-      <button class="btn btn-secondary" id="btnToLegacy">← Non-Unicode માં કન્વર્ટ</button>
+    <?php /* ---- Box 2 (નીચે): Unicode (Shruti) ---- */ ?>
+    <div class="conv-box">
+      <div class="conv-box-head">
+        <div class="box-selector">
+          <span class="box-lang">ગુજરાતી</span>
+          <span class="fmt-fixed">Unicode (Shruti)</span>
+        </div>
+        <span class="char-counter" id="counterUnicode">0 અક્ષર</span>
+      </div>
+      <textarea id="unicodeText" dir="ltr" spellcheck="false" lang="gu"
+        placeholder="Unicode પરિણામ અહીં આવશે... (તમારા મોબાઈલમાં Unicode ટાઇપ કરીને અહીં paste પણ કરી શકો)" aria-label="Unicode ટેક્સ્ટ"></textarea>
+      <div class="conv-actions">
+        <button class="btn-sm" data-copy="unicodeText">📋 કૉપી</button>
+        <button class="btn-sm" data-clear="unicodeText">✖ ક્લિયર</button>
+      </div>
     </div>
 
     <div class="demo-bar" id="demoBar" hidden>

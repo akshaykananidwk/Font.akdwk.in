@@ -93,7 +93,7 @@
     if (!el) return;
     var len = Array.from(box.value).length; // multibyte-safe
     el.textContent = len + ' અક્ષર' + (
-      !demoState.unlimited && box === legacyBox && demoState.char_limit
+      !demoState.unlimited && demoState.char_limit
         ? ' / ' + demoState.char_limit : ''
     );
     el.classList.toggle('limit-near',
@@ -121,6 +121,7 @@
       }
       refreshDemoBar();
       updateCounter(legacyBox, 'counterLegacy');
+      updateCounter(unicodeBox, 'counterUnicode');
     })
     .catch(function () {});
 
@@ -193,17 +194,9 @@
       });
   }
 
+  // ↓ ફોન્ટ(legacy) → Unicode ; ↑ Unicode → ફોન્ટ(legacy)
   $('btnToUnicode').addEventListener('click', function () { convert('legacy_to_unicode'); });
   $('btnToLegacy').addEventListener('click', function () { convert('unicode_to_legacy'); });
-
-  // ---------- Swap ----------
-  $('btnSwap').addEventListener('click', function () {
-    var tmp = legacyBox.value;
-    legacyBox.value = unicodeBox.value;
-    unicodeBox.value = tmp;
-    updateCounter(legacyBox, 'counterLegacy');
-    updateCounter(unicodeBox, 'counterUnicode');
-  });
 
   // ---------- Copy / Clear ----------
   document.addEventListener('click', function (e) {
@@ -243,19 +236,6 @@
     try { document.execCommand('copy'); done(); } catch (e) {}
     document.body.removeChild(ta);
   }
-
-  // ---------- Download .txt ----------
-  $('btnDownload').addEventListener('click', function () {
-    var text = unicodeBox.value;
-    if (!text) { setStatus('ડાઉનલોડ કરવા માટે પહેલા કન્વર્ટ કરો.', 'err'); return; }
-    var blob = new Blob(['﻿' + text], { type: 'text/plain;charset=utf-8' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'converted-unicode-' + Date.now() + '.txt';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-  });
 
   // ---------- Keyboard shortcuts ----------
   document.addEventListener('keydown', function (e) {
