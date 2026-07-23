@@ -1,0 +1,25 @@
+# Site-specific — update વખતે ક્યારેય overwrite ન થાય
+config/config.php
+install.lock
+.env
+
+# Runtime data
+storage/cache/*
+storage/logs/*
+storage/backups/*
+storage/temp/*
+storage/uploads/*
+!storage/cache/.gitkeep
+!storage/logs/.gitkeep
+!storage/backups/.gitkeep
+!storage/temp/.gitkeep
+!storage/uploads/.gitkeep
+
+# User custom mappings
+engine/mappings/custom/*
+!engine/mappings/custom/.gitkeep
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.swp
