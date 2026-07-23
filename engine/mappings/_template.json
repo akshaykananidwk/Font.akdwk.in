@@ -1,0 +1,30 @@
+{
+  "font_name": "FONT_NAME_HERE",
+  "language": "gujarati",
+  "version": "1.0",
+  "direction": "both",
+  "_howto": [
+    "આ template માંથી નવી mapping ફાઇલ બનાવો.",
+    "1) 'mappings' માં legacy glyph → Unicode જોડીઓ ઉમેરો. લાંબા sequences ને 4_char/3_char/2_char groups માં મૂકો — engine હંમેશા longest-match-first કરે છે.",
+    "2) જે legacy glyph 'િ' (pre-base i matra) આપે છે તેની value ફક્ત 'િ' રાખો — engine આપમેળે cluster પછી ખસેડશે.",
+    "3) જે legacy glyph રેફ (syllable પછી ટાઇપ થતો ર્) આપે છે તેની value ફક્ત 'ર્' રાખો — engine આપમેળે cluster પહેલાં ખસેડશે.",
+    "4) એક જ Unicode માટે અનેક legacy glyphs હોય તો 'reverse_exceptions' માં canonical glyph જણાવો.",
+    "5) Admin → Mapping Editor માંથી પણ આ ફાઇલ edit/test કરી શકાય છે.",
+    "6) mappings ખાલી હોય ત્યાં સુધી font 'stub' ગણાય છે અને converter માં ભૂલ-સંદેશ બતાવે છે."
+  ],
+  "pre_process": [],
+  "reorder_rules": {
+    "matra_i_prefix": ["િ"],
+    "reph_chars": ["ર્"],
+    "halant": "્"
+  },
+  "mappings": {
+    "3_char": {},
+    "2_char": {},
+    "1_char": {}
+  },
+  "post_process": [],
+  "reverse_pre_process": [],
+  "reverse_post_process": [],
+  "reverse_exceptions": {}
+}

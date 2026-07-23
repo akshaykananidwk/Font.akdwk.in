@@ -1,0 +1,25 @@
+{
+    "font_name": "Shree Guj 3392",
+    "language": "gujarati",
+    "version": "1.0",
+    "direction": "both",
+    "pre_process": [],
+    "reorder_rules": {
+        "matra_i_prefix": [
+            "િ"
+        ],
+        "reph_chars": [
+            "ર્"
+        ],
+        "halant": "્"
+    },
+    "mappings": {
+        "3_char": [],
+        "2_char": [],
+        "1_char": []
+    },
+    "post_process": [],
+    "reverse_pre_process": [],
+    "reverse_post_process": [],
+    "reverse_exceptions": []
+}
