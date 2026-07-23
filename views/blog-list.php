@@ -1,14 +1,14 @@
 <?php defined('BASE_PATH') or die('Direct access denied'); ?>
 <div class="container">
-  <nav class="breadcrumbs"><a href="<?= Helper::e(App::url('/')) ?>">હોમ</a> <span>›</span> <span>બ્લોગ</span></nav>
-  <h1>બ્લોગ</h1>
+  <nav class="breadcrumbs"><a href="<?= Helper::e(App::url('/')) ?>">Home</a> <span>›</span> <span>Blog</span></nav>
+  <h1>Blog</h1>
   <form method="get" action="<?= Helper::e(App::url('/blog')) ?>" class="blog-search">
-    <input type="search" name="q" value="<?= Helper::e($search ?? '') ?>" placeholder="લેખ શોધો...">
-    <button class="btn btn-sm-h" type="submit">શોધો</button>
+    <input type="search" name="q" value="<?= Helper::e($search ?? '') ?>" placeholder="Search articles...">
+    <button class="btn btn-sm-h" type="submit">Search</button>
   </form>
 
   <?php if (empty($posts)): ?>
-    <p class="muted">હજી કોઈ લેખ નથી. જલ્દી આવશે!</p>
+    <p class="muted">No articles yet. Coming soon!</p>
   <?php else: ?>
     <div class="blog-grid">
       <?php foreach ($posts as $post): ?>
@@ -19,7 +19,7 @@
             <?php if (!empty($post['category_name'])): ?> · <?= Helper::e($post['category_name']) ?><?php endif; ?>
           </p>
           <p><?= Helper::e(mb_substr(strip_tags((string)($post['excerpt'] ?: $post['content'])), 0, 180)) ?>…</p>
-          <a class="read-more" href="<?= Helper::e(App::url('/blog/' . $post['slug'])) ?>">વધુ વાંચો →</a>
+          <a class="read-more" href="<?= Helper::e(App::url('/blog/' . $post['slug'])) ?>">Read more →</a>
         </article>
       <?php endforeach; ?>
     </div>

@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
             $userId = (int)($_POST['user_id'] ?? 0);
             $user = $db->fetch("SELECT id FROM `{$usersTable}` WHERE id = ?", [$userId]);
             if ($user === null) {
-                throw new RuntimeException('User ID મળ્યો નહીં.');
+                throw new RuntimeException('User ID not found.');
             }
             $key = 'gfc_' . Helper::randomToken(28);
             $db->insert('api_keys', [
@@ -31,16 +31,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
                 'daily_limit' => max(0, (int)($_POST['daily_limit'] ?? 1000)),
                 'calls_date'  => date('Y-m-d'),
             ]);
-            $msg = 'નવી key: ' . $key;
+            $msg = 'New key: ' . $key;
         } elseif ($action === 'revoke' && $id > 0) {
             $db->update('api_keys', ['status' => 'revoked'], 'id = ?', [$id]);
-            $msg = 'Key revoke થઈ.';
+            $msg = 'Key revoked.';
         } elseif ($action === 'activate' && $id > 0) {
             $db->update('api_keys', ['status' => 'active'], 'id = ?', [$id]);
-            $msg = 'Key ફરી active થઈ.';
+            $msg = 'Key reactivated.';
         } elseif ($action === 'set_limit' && $id > 0) {
             $db->update('api_keys', ['daily_limit' => max(0, (int)($_POST['daily_limit'] ?? 0))], 'id = ?', [$id]);
-            $msg = 'Limit બદલાઈ.';
+            $msg = 'Limit changed.';
         }
         Auth::logAdminActivity((int)Session::get('admin_id'), $action, 'api-keys', ['key_id' => $id]);
     } catch (Throwable $ex) {
@@ -62,32 +62,32 @@ $usage = $db->fetchAll(
 
 <div class="admin-grid-2">
   <div class="admin-card">
-    <h2>નવી Key Generate</h2>
+    <h2>Generate New Key</h2>
     <form method="post">
       <?= Security::csrfField() ?>
       <input type="hidden" name="action" value="generate">
       <label>User ID</label><input type="number" name="user_id" required>
-      <label>નામ</label><input type="text" name="name" value="Admin issued">
+      <label>Name</label><input type="text" name="name" value="Admin issued">
       <label>Daily Limit</label><input type="number" name="daily_limit" value="1000">
       <button class="abtn abtn-primary" type="submit">Generate</button>
     </form>
   </div>
   <div class="admin-card">
-    <h2>API Usage — છેલ્લા 7 દિવસ</h2>
+    <h2>API Usage — Last 7 Days</h2>
     <table class="atable">
       <?php foreach ($usage as $u): ?>
         <tr><td><?= $e($u['d']) ?></td><td class="num"><?= number_format((int)$u['c']) ?> calls</td></tr>
       <?php endforeach; ?>
-      <?php if (!$usage): ?><tr><td class="amuted">હજી API calls નથી</td></tr><?php endif; ?>
+      <?php if (!$usage): ?><tr><td class="amuted">No API calls yet</td></tr><?php endif; ?>
     </table>
   </div>
 </div>
 
 <div class="admin-card">
-  <h2>બધી Keys</h2>
+  <h2>All Keys</h2>
   <div class="table-scroll">
     <table class="atable">
-      <tr><th>Key</th><th>User</th><th>નામ</th><th>આજે/Limit</th><th>કુલ</th><th>Status</th><th></th></tr>
+      <tr><th>Key</th><th>User</th><th>Name</th><th>Today/Limit</th><th>Total</th><th>Status</th><th></th></tr>
       <?php foreach ($keys as $k): ?>
       <tr>
         <td><code><?= $e(substr($k['api_key'], 0, 16)) ?>…</code></td>

@@ -14,7 +14,7 @@ class AuthController
             Helper::redirect(App::url('/dashboard'));
         }
         View::render('login', [
-            'metaTitle' => 'લોગિન — Gujarati Font Converter',
+            'metaTitle' => 'Login — Gujarati Font Converter',
             'noindex'   => true,
             'error'     => Session::flash('auth_error'),
             'success'   => Session::flash('auth_success'),
@@ -25,11 +25,11 @@ class AuthController
     public static function login(): void
     {
         if (!Security::verifyCsrf()) {
-            Session::flash('auth_error', 'Session expired — ફરી પ્રયત્ન કરો.');
+            Session::flash('auth_error', 'Session expired — please try again.');
             Helper::redirect(App::url('/login'));
         }
         if (!Security::rateLimit(Helper::clientIp(), 'user_login', 10, 900)) {
-            Session::flash('auth_error', 'ઘણા પ્રયાસ. 15 મિનિટ પછી પ્રયત્ન કરો.');
+            Session::flash('auth_error', 'Too many attempts. Please try again after 15 minutes.');
             Helper::redirect(App::url('/login'));
         }
         $result = Auth::userLogin(trim((string)($_POST['email'] ?? '')), (string)($_POST['password'] ?? ''));
@@ -47,7 +47,7 @@ class AuthController
             Helper::redirect(App::url('/dashboard'));
         }
         View::render('register', [
-            'metaTitle' => 'રજિસ્ટર — Gujarati Font Converter',
+            'metaTitle' => 'Register — Gujarati Font Converter',
             'noindex'   => true,
             'error'     => Session::flash('auth_error'),
         ]);
@@ -57,11 +57,11 @@ class AuthController
     public static function register(): void
     {
         if (!Security::verifyCsrf() || !Security::checkHoneypot()) {
-            Session::flash('auth_error', 'Session expired — ફરી પ્રયત્ન કરો.');
+            Session::flash('auth_error', 'Session expired — please try again.');
             Helper::redirect(App::url('/register'));
         }
         if (!Security::rateLimit(Helper::clientIp(), 'register', 5, 3600)) {
-            Session::flash('auth_error', 'ઘણા પ્રયાસ. પછી પ્રયત્ન કરો.');
+            Session::flash('auth_error', 'Too many attempts. Please try again later.');
             Helper::redirect(App::url('/register'));
         }
 
@@ -70,7 +70,7 @@ class AuthController
         $pass = (string)($_POST['password'] ?? '');
 
         if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($pass) < 8) {
-            Session::flash('auth_error', 'નામ, valid email અને 8+ character password જરૂરી.');
+            Session::flash('auth_error', 'Name, a valid email and an 8+ character password are required.');
             Helper::redirect(App::url('/register'));
         }
 
@@ -79,7 +79,7 @@ class AuthController
         try {
             $existing = $db->fetch("SELECT id FROM `{$table}` WHERE email = ?", [$email]);
             if ($existing !== null) {
-                Session::flash('auth_error', 'આ email પહેલેથી registered છે — login કરો.');
+                Session::flash('auth_error', 'This email is already registered — please log in.');
                 Helper::redirect(App::url('/login'));
             }
             $db->insert('users', [
@@ -90,12 +90,12 @@ class AuthController
                 'status'        => 'active',
                 'verify_token'  => Helper::randomToken(24),
             ]);
-            Mailer::sendTemplate($email, 'સ્વાગત છે — ' . App::setting('site_name', APP_NAME), 'નમસ્તે ' . Helper::e($name) . ',<br><br>તમારું એકાઉન્ટ બની ગયું છે. Paid plan લઈને અમર્યાદિત કન્વર્ઝન અને API access મેળવો.<br><br><a href="' . App::url('/pricing') . '">પ્લાન જુઓ</a>');
-            Session::flash('auth_success', 'એકાઉન્ટ બની ગયું! હવે login કરો.');
+            Mailer::sendTemplate($email, 'Welcome — ' . App::setting('site_name', APP_NAME), 'Hello ' . Helper::e($name) . ',<br><br>Your account has been created. Get a paid plan for unlimited conversions and API access.<br><br><a href="' . App::url('/pricing') . '">View plans</a>');
+            Session::flash('auth_success', 'Account created! Please log in now.');
             Helper::redirect(App::url('/login'));
         } catch (Throwable $e) {
             Logger::error('Register failed: ' . $e->getMessage());
-            Session::flash('auth_error', 'Registration ફેલ થયું — ફરી પ્રયત્ન કરો.');
+            Session::flash('auth_error', 'Registration failed — please try again.');
             Helper::redirect(App::url('/register'));
         }
     }
@@ -132,7 +132,7 @@ class AuthController
             'apiKeys'          => $apiKeys,
             'todayConversions' => $todayConversions,
             'hasActivePlan'    => Auth::userHasActivePlan($user),
-            'metaTitle'        => 'ડેશબોર્ડ — Gujarati Font Converter',
+            'metaTitle'        => 'Dashboard — Gujarati Font Converter',
             'noindex'          => true,
             'flash'            => Session::flash('dash_msg'),
         ]);
@@ -154,14 +154,14 @@ class AuthController
         $plansTable = $db->table('plans');
         $plan = $user['plan_id'] ? $db->fetch("SELECT * FROM `{$plansTable}` WHERE id = ?", [$user['plan_id']]) : null;
         if (!$plan || (int)$plan['api_access'] !== 1 || !Auth::userHasActivePlan($user)) {
-            Session::flash('dash_msg', 'API access માટે Pro કે Business plan જરૂરી છે.');
+            Session::flash('dash_msg', 'A Pro or Business plan is required for API access.');
             Helper::redirect(App::url('/dashboard'));
         }
 
         $keysTable = $db->table('api_keys');
         $count = (int)$db->fetchValue("SELECT COUNT(*) FROM `{$keysTable}` WHERE user_id = ? AND status = 'active'", [$user['id']]);
         if ($count >= 5) {
-            Session::flash('dash_msg', 'મહત્તમ 5 active API keys રાખી શકાય.');
+            Session::flash('dash_msg', 'You can have a maximum of 5 active API keys.');
             Helper::redirect(App::url('/dashboard'));
         }
 
@@ -175,8 +175,8 @@ class AuthController
             'calls_date'  => date('Y-m-d'),
             'expires_at'  => $user['subscription_end'],
         ]);
-        Mailer::sendTemplate($user['email'], 'નવી API Key બની — ' . App::setting('site_name', APP_NAME), 'તમારી નવી API key બની ગઈ છે. Dashboard માંથી જુઓ. તમે નહોતી બનાવી? તરત સંપર્ક કરો.');
-        Session::flash('dash_msg', 'નવી API key બની ગઈ: ' . $key);
+        Mailer::sendTemplate($user['email'], 'New API Key created — ' . App::setting('site_name', APP_NAME), 'Your new API key has been created. View it in your Dashboard. Did not create it? Contact us immediately.');
+        Session::flash('dash_msg', 'New API key created: ' . $key);
         Helper::redirect(App::url('/dashboard'));
     }
 }

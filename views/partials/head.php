@@ -67,6 +67,6 @@ textarea{width:100%;min-height:220px;padding:12px;border:1px solid var(--c-borde
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','<?= $e($gaId) ?>');</script>
 <?php endif; ?>
 <script>
-/* Dark mode flash ટાળવા head માં જ theme લાગુ કરો */
+/* Apply theme here in <head> to avoid a dark-mode flash */
 (function(){try{var t=localStorage.getItem('gfc_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>

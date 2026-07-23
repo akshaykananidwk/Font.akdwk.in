@@ -9,9 +9,9 @@ require __DIR__ . '/includes/header.php';
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!Security::verifyCsrf()) {
-        $error = 'Session expired — ફરી પ્રયત્ન કરો.';
+        $error = 'Session expired — please try again.';
     } elseif (!Security::rateLimit(Helper::clientIp(), 'admin_login', 10, 900)) {
-        $error = 'ઘણા પ્રયાસ — 15 મિનિટ પછી પ્રયત્ન કરો.';
+        $error = 'Too many attempts — please try again after 15 minutes.';
     } else {
         $result = Auth::adminLogin(trim((string)($_POST['username'] ?? '')), (string)($_POST['password'] ?? ''));
         if ($result['success']) {
@@ -40,7 +40,7 @@ if (Auth::isAdminLoggedIn()) {
       <input id="aUser" type="text" name="username" required autocomplete="username" autofocus>
       <label for="aPass">Password</label>
       <input id="aPass" type="password" name="password" required autocomplete="current-password">
-      <button type="submit" class="abtn abtn-primary abtn-block">લોગિન</button>
+      <button type="submit" class="abtn abtn-primary abtn-block">Login</button>
     </form>
   </div>
 </div>

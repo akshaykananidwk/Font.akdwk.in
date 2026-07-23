@@ -11,7 +11,7 @@ $file = (string)($_GET['file'] ?? ($_POST['file'] ?? ''));
 // Path traversal રક્ષણ
 if ($file !== '' && (preg_match('#\.\.|^/|\\\\#', $file) || !str_ends_with($file, '.json'))) {
     $file = '';
-    $err = 'અમાન્ય ફાઇલ path.';
+    $err = 'Invalid file path.';
 }
 $fullPath = $file !== '' ? MAPPINGS_PATH . '/' . $file : '';
 
@@ -40,24 +40,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf() && $file !==
             $json = (string)($_POST['json_content'] ?? '');
             $decoded = json_decode($json, true);
             if (!is_array($decoded)) {
-                throw new RuntimeException('અમાન્ય JSON: ' . json_last_error_msg());
+                throw new RuntimeException('Invalid JSON: ' . json_last_error_msg());
             }
             if (!isset($decoded['mappings']) || !is_array($decoded['mappings'])) {
-                throw new RuntimeException('"mappings" object જરૂરી છે.');
+                throw new RuntimeException('A "mappings" object is required.');
             }
             file_put_contents($fullPath, json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n", LOCK_EX);
             Cache::clear();
             Auth::logAdminActivity((int)Session::get('admin_id'), 'save_mapping', 'mapping-editor', ['file' => $file]);
-            $msg = 'Mapping સેવ થયું અને cache clear થયું.';
+            $msg = 'Mapping saved and cache cleared.';
         } elseif ($action === 'import_csv' && !empty($_FILES['csv_file']['tmp_name'])) {
             $up = $_FILES['csv_file'];
             if ($up['size'] > 2 * 1024 * 1024) {
-                throw new RuntimeException('CSV 2MB થી નાની હોવી જોઈએ.');
+                throw new RuntimeException('CSV must be smaller than 2MB.');
             }
             $finfo = new finfo(FILEINFO_MIME_TYPE);
             $mime = $finfo->file($up['tmp_name']);
             if (!in_array($mime, ['text/plain', 'text/csv', 'application/csv'], true)) {
-                throw new RuntimeException('ફક્ત CSV ફાઇલ ચાલે (મળ્યું: ' . $mime . ').');
+                throw new RuntimeException('Only CSV files are allowed (found: ' . $mime . ').');
             }
             $data = is_file($fullPath)
                 ? (json_decode((string)file_get_contents($fullPath), true) ?: [])
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf() && $file !==
             fclose($fp);
             file_put_contents($fullPath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n", LOCK_EX);
             Cache::clear();
-            $msg = "{$count} pairs import થયા.";
+            $msg = "{$count} pairs imported.";
         }
     } catch (Throwable $ex) {
         $err = $ex->getMessage();
@@ -103,10 +103,10 @@ if ($file !== '' && is_file($fullPath)) {
 <?php if ($err): ?><div class="admin-alert alert-err">⚠ <?= $e($err) ?></div><?php endif; ?>
 
 <div class="admin-card">
-  <h2>Mapping ફાઇલ પસંદ કરો</h2>
+  <h2>Select Mapping File</h2>
   <form method="get" class="filter-row">
     <select name="file" onchange="this.form.submit()">
-      <option value="">— પસંદ કરો —</option>
+      <option value="">— Select —</option>
       <?php foreach ($mappingFiles as $mf): ?>
         <option value="<?= $e($mf['file']) ?>" <?= $file === $mf['file'] ? 'selected' : '' ?>><?= $e($mf['file']) ?></option>
       <?php endforeach; ?>
@@ -116,10 +116,10 @@ if ($file !== '' && is_file($fullPath)) {
 
 <?php if ($file !== '' && $content !== ''): ?>
 <div class="admin-card">
-  <h2><?= $e($file) ?> <small class="amuted">(<?= $pairCount ?> pairs<?= $pairCount === 0 ? ' — STUB, data ઉમેરો' : '' ?>)</small></h2>
+  <h2><?= $e($file) ?> <small class="amuted">(<?= $pairCount ?> pairs<?= $pairCount === 0 ? ' — STUB, add data' : '' ?>)</small></h2>
   <p class="amuted">
-    JSON structure: <code>mappings.1_char</code> વગેરે groups માં <code>"legacy": "unicode"</code> જોડીઓ.
-    Pre-base િ glyph ની value ફક્ત <code>"િ"</code> અને reph glyph ની value ફક્ત <code>"ર્"</code> રાખો — engine આપમેળે reorder કરે છે.
+    JSON structure: <code>"legacy": "unicode"</code> pairs inside groups such as <code>mappings.1_char</code>.
+    Set the pre-base િ glyph value to just <code>"િ"</code> and the reph glyph value to just <code>"ર્"</code> — the engine reorders automatically.
     <a href="?file=<?= urlencode($file) ?>&export=csv">⬇ CSV Export</a>
   </p>
   <form method="post">
@@ -127,14 +127,14 @@ if ($file !== '' && is_file($fullPath)) {
     <input type="hidden" name="action" value="save_json">
     <input type="hidden" name="file" value="<?= $e($file) ?>">
     <textarea name="json_content" class="json-editor" rows="24" spellcheck="false"><?= $e($content) ?></textarea>
-    <button class="abtn abtn-primary" type="submit">💾 સેવ + Cache Clear</button>
+    <button class="abtn abtn-primary" type="submit">💾 Save + Cache Clear</button>
   </form>
 </div>
 
 <div class="admin-grid-2">
   <div class="admin-card">
     <h2>📥 CSV Import</h2>
-    <p class="amuted">Columns: <code>legacy, unicode, group</code> (group ખાલી હોય તો length પ્રમાણે આપમેળે).</p>
+    <p class="amuted">Columns: <code>legacy, unicode, group</code> (if group is empty, it is set automatically by length).</p>
     <form method="post" enctype="multipart/form-data">
       <?= Security::csrfField() ?>
       <input type="hidden" name="action" value="import_csv">
@@ -144,7 +144,7 @@ if ($file !== '' && is_file($fullPath)) {
     </form>
   </div>
   <div class="admin-card">
-    <h2>⚡ ઝડપી Test</h2>
+    <h2>⚡ Quick Test</h2>
     <label>Input (legacy)</label>
     <textarea id="meTestInput" rows="2"></textarea>
     <button class="abtn abtn-primary" type="button" id="meTestBtn">▶ Legacy → Unicode</button>

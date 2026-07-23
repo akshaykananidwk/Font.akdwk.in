@@ -1,6 +1,6 @@
 <?php defined('BASE_PATH') or die('Direct access denied'); ?>
 <!DOCTYPE html>
-<html lang="gu" data-theme="light">
+<html lang="en" data-theme="light">
 <head>
 <?php include VIEWS_PATH . '/partials/head.php'; ?>
 </head>

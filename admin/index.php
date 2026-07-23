@@ -2,7 +2,7 @@
 /**
  * Admin Dashboard — stats, chart, top fonts, server status, update badge.
  */
-$PAGE_TITLE = 'ડેશબોર્ડ';
+$PAGE_TITLE = 'Dashboard';
 require __DIR__ . '/includes/header.php';
 
 $db = Database::getInstance();
@@ -50,17 +50,17 @@ $dbSize = (float)$db->fetchValue(
 $diskFree = (float)@disk_free_space(BASE_PATH);
 ?>
 <div class="stat-grid">
-  <div class="stat-card"><span class="stat-num"><?= number_format($stats['today']) ?></span><span class="stat-label">આજના કન્વર્ઝન</span></div>
-  <div class="stat-card"><span class="stat-num"><?= number_format($stats['week']) ?></span><span class="stat-label">આ અઠવાડિયે</span></div>
-  <div class="stat-card"><span class="stat-num"><?= number_format($stats['month']) ?></span><span class="stat-label">આ મહિને</span></div>
-  <div class="stat-card"><span class="stat-num"><?= number_format($stats['users']) ?></span><span class="stat-label">કુલ યુઝર</span></div>
-  <div class="stat-card"><span class="stat-num"><?= number_format($stats['active']) ?></span><span class="stat-label">Active સબસ્ક્રિપ્શન</span></div>
-  <div class="stat-card"><span class="stat-num"><?= number_format($stats['apiToday']) ?></span><span class="stat-label">આજની API calls</span></div>
+  <div class="stat-card"><span class="stat-num"><?= number_format($stats['today']) ?></span><span class="stat-label">Conversions Today</span></div>
+  <div class="stat-card"><span class="stat-num"><?= number_format($stats['week']) ?></span><span class="stat-label">This Week</span></div>
+  <div class="stat-card"><span class="stat-num"><?= number_format($stats['month']) ?></span><span class="stat-label">This Month</span></div>
+  <div class="stat-card"><span class="stat-num"><?= number_format($stats['users']) ?></span><span class="stat-label">Total Users</span></div>
+  <div class="stat-card"><span class="stat-num"><?= number_format($stats['active']) ?></span><span class="stat-label">Active Subscriptions</span></div>
+  <div class="stat-card"><span class="stat-num"><?= number_format($stats['apiToday']) ?></span><span class="stat-label">API Calls Today</span></div>
 </div>
 
 <div class="admin-grid-2">
   <div class="admin-card">
-    <h2>છેલ્લા 14 દિવસના કન્વર્ઝન</h2>
+    <h2>Conversions in the Last 14 Days</h2>
     <div class="bar-chart" role="img" aria-label="Daily conversions chart">
       <?php $max = max(1, max($chartData)); ?>
       <?php foreach ($chartData as $day => $count): ?>
@@ -73,7 +73,7 @@ $diskFree = (float)@disk_free_space(BASE_PATH);
   </div>
 
   <div class="admin-card">
-    <h2>ટોપ 10 ફોન્ટ</h2>
+    <h2>Top 10 Fonts</h2>
     <table class="atable">
       <?php foreach ($topFonts as $i => $f): ?>
       <tr><td><?= $i + 1 ?>. <?= $e($f['font_name']) ?></td><td class="num"><?= number_format((int)$f['conversion_count']) ?></td></tr>
@@ -84,8 +84,8 @@ $diskFree = (float)@disk_free_space(BASE_PATH);
 
 <div class="admin-grid-2">
   <div class="admin-card">
-    <h2>છેલ્લા 10 Contacts</h2>
-    <?php if (!$recentContacts): ?><p class="amuted">કોઈ સંદેશ નથી.</p><?php endif; ?>
+    <h2>Latest 10 Contacts</h2>
+    <?php if (!$recentContacts): ?><p class="amuted">No messages.</p><?php endif; ?>
     <table class="atable">
       <?php foreach ($recentContacts as $c): ?>
       <tr>
@@ -98,16 +98,16 @@ $diskFree = (float)@disk_free_space(BASE_PATH);
   </div>
 
   <div class="admin-card">
-    <h2>સર્વર Status</h2>
+    <h2>Server Status</h2>
     <table class="atable">
       <tr><td>PHP Version</td><td><?= $e(PHP_VERSION) ?></td></tr>
       <tr><td>DB Size</td><td><?= Helper::formatBytes((int)$dbSize) ?></td></tr>
       <tr><td>Disk Free</td><td><?= Helper::formatBytes((int)$diskFree) ?></td></tr>
       <tr><td>App Version</td><td>v<?= APP_VERSION ?></td></tr>
-      <tr><td>intl Extension</td><td><?= extension_loaded('intl') ? '✓' : '✗ (ભલામણ)' ?></td></tr>
+      <tr><td>intl Extension</td><td><?= extension_loaded('intl') ? '✓' : '✗ (recommended)' ?></td></tr>
       <tr><td>Maintenance</td><td><?= App::isMaintenanceMode() ? '🔧 ON' : '✓ OFF' ?></td></tr>
     </table>
-    <p style="margin-top:10px"><a class="abtn" href="update.php">🔄 Update ચેક કરો</a></p>
+    <p style="margin-top:10px"><a class="abtn" href="update.php">🔄 Check for Update</a></p>
   </div>
 </div>
 

@@ -2,7 +2,7 @@
 /**
  * CMS — static pages editor (SEO fields સાથે).
  */
-$PAGE_TITLE = 'પેજીસ (CMS)';
+$PAGE_TITLE = 'Pages (CMS)';
 require __DIR__ . '/includes/header.php';
 
 $db = Database::getInstance();
@@ -27,18 +27,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
                 'status'           => ($_POST['status'] ?? 'published') === 'draft' ? 'draft' : 'published',
             ];
             if ($data['slug'] === '' || $data['title'] === '') {
-                throw new RuntimeException('Slug અને title જરૂરી છે.');
+                throw new RuntimeException('Slug and title are required.');
             }
             if ($id > 0) {
                 $db->update('pages', $data, 'id = ?', [$id]);
-                $msg = 'Page update થયું.';
+                $msg = 'Page updated.';
             } else {
                 $db->insert('pages', $data);
-                $msg = 'નવું page બન્યું.';
+                $msg = 'New page created.';
             }
         } elseif ($action === 'delete' && $id > 0) {
             $db->query("DELETE FROM `{$pagesTable}` WHERE id = ?", [$id]);
-            $msg = 'Page delete થયું.';
+            $msg = 'Page deleted.';
         }
         Auth::logAdminActivity((int)Session::get('admin_id'), $action, 'pages', ['page_id' => $id]);
     } catch (Throwable $ex) {
@@ -56,7 +56,7 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
 <?php if ($err): ?><div class="admin-alert alert-err">⚠ <?= $e($err) ?></div><?php endif; ?>
 
 <div class="admin-card">
-  <h2><?= $editPage ? 'Page Edit: ' . $e($editPage['title']) : 'નવું Page' ?></h2>
+  <h2><?= $editPage ? 'Edit Page: ' . $e($editPage['title']) : 'New Page' ?></h2>
   <form method="post">
     <?= Security::csrfField() ?>
     <input type="hidden" name="action" value="save">
@@ -76,7 +76,7 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
     <label>Meta Keywords</label>
     <input type="text" name="meta_keywords" value="<?= $e($editPage['meta_keywords'] ?? '') ?>">
     <div class="row-2">
-      <div><label><input type="checkbox" name="is_indexed" value="1" <?= (int)($editPage['is_indexed'] ?? 1) === 1 ? 'checked' : '' ?>> Search engines માં index થાય</label></div>
+      <div><label><input type="checkbox" name="is_indexed" value="1" <?= (int)($editPage['is_indexed'] ?? 1) === 1 ? 'checked' : '' ?>> Index in search engines</label></div>
       <div>
         <label>Status</label>
         <select name="status">
@@ -85,13 +85,13 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
         </select>
       </div>
     </div>
-    <button class="abtn abtn-primary" type="submit">સેવ</button>
+    <button class="abtn abtn-primary" type="submit">Save</button>
     <?php if ($editPage): ?><a class="abtn" href="pages.php">Cancel</a><?php endif; ?>
   </form>
 </div>
 
 <div class="admin-card">
-  <h2>બધા Pages</h2>
+  <h2>All Pages</h2>
   <table class="atable">
     <tr><th>Slug</th><th>Title</th><th>Status</th><th>Updated</th><th></th></tr>
     <?php foreach ($pages as $p): ?>
@@ -102,7 +102,7 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
       <td><small><?= $e($p['updated_at']) ?></small></td>
       <td>
         <a class="abtn abtn-xs" href="?edit=<?= (int)$p['id'] ?>">Edit</a>
-        <form method="post" class="inline" onsubmit="return confirm('Page delete કરવું?')"><?= Security::csrfField() ?>
+        <form method="post" class="inline" onsubmit="return confirm('Delete this page?')"><?= Security::csrfField() ?>
           <input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
           <button class="abtn abtn-xs abtn-danger" type="submit">Del</button>
         </form>

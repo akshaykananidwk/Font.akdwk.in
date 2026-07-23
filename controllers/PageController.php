@@ -42,8 +42,8 @@ class PageController
         $plans = $db->fetchAll("SELECT * FROM `{$table}` WHERE is_active = 1 ORDER BY sort_order ASC");
         View::render('pricing', [
             'plans'           => $plans,
-            'metaTitle'       => 'ભાવ | Pricing — Gujarati Font Converter',
-            'metaDescription' => 'ગુજરાતી ફોન્ટ કન્વર્ટરના સસ્તા પ્લાન — મફત demo થી લઈને અમર્યાદિત API access સુધી. ₹99 થી શરૂ.',
+            'metaTitle'       => 'Pricing — Gujarati Font Converter',
+            'metaDescription' => 'Affordable plans for the Gujarati Font Converter — from a free demo to unlimited API access. Starting at ₹99.',
             'canonical'       => App::url('/pricing'),
         ]);
     }
@@ -52,8 +52,8 @@ class PageController
     public static function contactForm(): void
     {
         View::render('contact', [
-            'metaTitle'       => 'સંપર્ક કરો | Contact — Gujarati Font Converter',
-            'metaDescription' => 'પ્રશ્ન, સૂચન કે ફોન્ટ mapping ની ભૂલ જણાવવા અમારો સંપર્ક કરો.',
+            'metaTitle'       => 'Contact — Gujarati Font Converter',
+            'metaDescription' => 'Contact us with questions, suggestions, or to report a font mapping error.',
             'canonical'       => App::url('/contact'),
             'sent'            => Session::flash('contact_sent'),
             'error'           => Session::flash('contact_error'),
@@ -64,7 +64,7 @@ class PageController
     public static function contactSubmit(): void
     {
         if (!Security::verifyCsrf()) {
-            Session::flash('contact_error', 'Session expired — ફરી પ્રયત્ન કરો.');
+            Session::flash('contact_error', 'Session expired — please try again.');
             Helper::redirect(App::url('/contact'));
         }
         if (!Security::checkHoneypot()) {
@@ -73,7 +73,7 @@ class PageController
             Helper::redirect(App::url('/contact'));
         }
         if (!Security::rateLimit(Helper::clientIp(), 'contact', 5, 3600)) {
-            Session::flash('contact_error', 'ઘણા બધા messages. થોડી વાર પછી પ્રયત્ન કરો.');
+            Session::flash('contact_error', 'Too many messages. Please try again shortly.');
             Helper::redirect(App::url('/contact'));
         }
 
@@ -83,7 +83,7 @@ class PageController
         $message = mb_substr(trim(Security::cleanInput((string)($_POST['message'] ?? ''))), 0, 5000);
 
         if ($name === '' || $message === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            Session::flash('contact_error', 'નામ, valid email અને message જરૂરી છે.');
+            Session::flash('contact_error', 'Name, a valid email and a message are required.');
             Helper::redirect(App::url('/contact'));
         }
 
@@ -99,13 +99,13 @@ class PageController
             // Admin ને જાણ + auto-reply
             $adminEmail = App::config()['site']['admin_email'] ?? '';
             if ($adminEmail !== '') {
-                Mailer::sendTemplate($adminEmail, 'નવો સંપર્ક સંદેશ: ' . $subject, nl2br(Helper::e("From: {$name} <{$email}>\n\n{$message}")));
+                Mailer::sendTemplate($adminEmail, 'New contact message: ' . $subject, nl2br(Helper::e("From: {$name} <{$email}>\n\n{$message}")));
             }
-            Mailer::sendTemplate($email, 'તમારો સંદેશ મળ્યો છે — ' . App::setting('site_name', APP_NAME), 'નમસ્તે ' . Helper::e($name) . ',<br><br>તમારો સંદેશ અમને મળ્યો છે. અમે જલ્દી જવાબ આપીશું.<br><br>આભાર!');
+            Mailer::sendTemplate($email, 'We received your message — ' . App::setting('site_name', APP_NAME), 'Hello ' . Helper::e($name) . ',<br><br>We have received your message and will reply soon.<br><br>Thank you!');
             Session::flash('contact_sent', '1');
         } catch (Throwable $e) {
             Logger::error('Contact save failed: ' . $e->getMessage());
-            Session::flash('contact_error', 'Message સેવ ન થયો — ફરી પ્રયત્ન કરો.');
+            Session::flash('contact_error', 'Message could not be saved — please try again.');
         }
         Helper::redirect(App::url('/contact'));
     }
@@ -115,7 +115,7 @@ class PageController
     {
         View::render('api-docs', [
             'metaTitle'       => 'API Documentation — Gujarati Font Converter',
-            'metaDescription' => 'REST API થી ગુજરાતી ફોન્ટ કન્વર્ઝન તમારી app માં integrate કરો. cURL, PHP, Python, JavaScript examples.',
+            'metaDescription' => 'Integrate Gujarati font conversion into your app via our REST API. cURL, PHP, Python, JavaScript examples.',
             'canonical'       => App::url('/api'),
         ]);
     }

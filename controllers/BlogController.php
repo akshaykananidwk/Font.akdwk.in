@@ -40,8 +40,8 @@ class BlogController
             'page'            => $page,
             'totalPages'      => (int)ceil($total / $perPage),
             'search'          => $search,
-            'metaTitle'       => 'બ્લોગ — Gujarati Font Converter',
-            'metaDescription' => 'ગુજરાતી ટાઇપિંગ, ફોન્ટ કન્વર્ઝન અને Unicode વિશે ઉપયોગી લેખો.',
+            'metaTitle'       => 'Blog — Gujarati Font Converter',
+            'metaDescription' => 'Helpful articles about Gujarati typing, font conversion and Unicode.',
             'canonical'       => App::url('/blog'),
         ]);
     }

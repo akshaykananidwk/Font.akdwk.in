@@ -20,8 +20,8 @@ class HomeController
             'metaTitle'       => App::setting('default_meta_title', 'Gujarati Font Converter'),
             'metaDescription' => App::setting('default_meta_description', ''),
             'canonical'       => App::url('/'),
-            'h1'              => 'ગુજરાતી ફોન્ટ કન્વર્ટર',
-            'introText'       => 'LMG, Shree Guj, Saral, Terafont, Akruti, Gujlys, EKLG, Bhasha Bharti, Sulekh જેવા 90+ જૂના (non-Unicode) ગુજરાતી ફોન્ટને Unicode (Shruti / Nirmala UI) માં અને Unicode માંથી પાછા legacy ફોન્ટમાં કન્વર્ટ કરો — સંપૂર્ણ મફત, કોઈ સોફ્ટવેર install કર્યા વગર. તમારો ટેક્સ્ટ સર્વર પર ક્યારેય સ્ટોર થતો નથી.',
+            'h1'              => 'Gujarati Font Converter',
+            'introText'       => 'Convert 90+ legacy (non-Unicode) Gujarati fonts such as LMG, Shree Guj, Saral, Terafont, Akruti, Gujlys, EKLG, Bhasha Bharti and Sulekh to Unicode (Shruti / Nirmala UI) — and back from Unicode to legacy fonts. Completely free, no software to install. Your text is never stored on the server.',
             'showFaq'         => true,
         ]);
     }
@@ -40,18 +40,18 @@ class HomeController
             return;
         }
         $fonts = self::activeFonts((int)$lang['id']);
-        $names = ['gu' => 'ગુજરાતી', 'hi' => 'हिन्दी', 'mr' => 'मराठी', 'ne' => 'नेपाली'];
+        $names = ['gu' => 'Gujarati', 'hi' => 'Hindi', 'mr' => 'Marathi', 'ne' => 'Nepali'];
         $paths = ['gu' => 'gujarati-font-converter', 'hi' => 'hindi-font-converter', 'mr' => 'marathi-font-converter', 'ne' => 'nepali-font-converter'];
         $native = $names[$code] ?? $lang['name'];
         View::render('home', [
             'fonts'           => $fonts,
             'popularFonts'    => array_values(array_filter($fonts, fn($f) => (int)$f['is_popular'] === 1)),
             'selectedSlug'    => $fonts[0]['font_slug'] ?? '',
-            'metaTitle'       => "{$lang['name']} Font Converter | {$native} ફોન્ટ કન્વર્ટર — Legacy to Unicode",
+            'metaTitle'       => "{$lang['name']} Font Converter — Legacy to Unicode | Free Online Tool",
             'metaDescription' => "Free online {$lang['name']} font converter. Convert legacy {$lang['name']} fonts to Unicode ({$lang['unicode_font']}) and back instantly. 100% free, no installation.",
             'canonical'       => App::url('/' . ($paths[$code] ?? '')),
-            'h1'              => "{$native} ફોન્ટ કન્વર્ટર",
-            'introText'       => "{$lang['name']} ભાષાના legacy ફોન્ટને Unicode ({$lang['unicode_font']}) માં કન્વર્ટ કરો. " . count($fonts) . " ફોન્ટ ઉપલબ્ધ.",
+            'h1'              => "{$lang['name']} Font Converter",
+            'introText'       => "Convert legacy {$lang['name']} fonts to Unicode ({$lang['unicode_font']}). " . count($fonts) . " fonts available.",
             'showFaq'         => true,
         ]);
     }
@@ -88,11 +88,11 @@ class HomeController
             'fonts'           => $fonts,
             'popularFonts'    => array_values(array_filter($fonts, fn($f) => (int)$f['is_popular'] === 1)),
             'selectedSlug'    => $slug,
-            'metaTitle'       => "{$name} થી Unicode કન્વર્ટર | મફત ઓનલાઇન {$font['lang_name']} ફોન્ટ કન્વર્ટર",
-            'metaDescription' => "{$name} ફોન્ટને Unicode ({$font['unicode_font']}) માં તરત કન્વર્ટ કરો — મફત, સચોટ અને સુરક્ષિત. {$name} to Unicode converter online, no software needed.",
+            'metaTitle'       => "{$name} to Unicode Converter | Free Online {$font['lang_name']} Font Converter",
+            'metaDescription' => "Instantly convert {$name} font to Unicode ({$font['unicode_font']}) — free, accurate and secure. {$name} to Unicode converter online, no software needed.",
             'canonical'       => App::url("/{$slug}-to-unicode-converter"),
-            'h1'              => "{$name} ફોન્ટ થી Unicode કન્વર્ટર",
-            'introText'       => "{$name} એ {$font['lang_name']} ભાષાનો લોકપ્રિય legacy (non-Unicode) ફોન્ટ છે. નીચેના બોક્સમાં {$name} નો ટેક્સ્ટ paste કરો અને એક ક્લિકમાં Unicode ({$font['unicode_font']}) માં મેળવો.",
+            'h1'              => "{$name} Font to Unicode Converter",
+            'introText'       => "{$name} is a popular legacy (non-Unicode) {$font['lang_name']} font. Paste your {$name} text into the box below and get Unicode ({$font['unicode_font']}) in one click.",
             'fontPageData'    => $font,
             'relatedFonts'    => $related,
             'showFaq'         => true,

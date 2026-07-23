@@ -2,7 +2,7 @@
 /**
  * પ્લાન મેનેજર — CRUD.
  */
-$PAGE_TITLE = 'પ્લાન';
+$PAGE_TITLE = 'Plans';
 require __DIR__ . '/includes/header.php';
 
 $db = Database::getInstance();
@@ -29,18 +29,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
                 'sort_order'      => (int)($_POST['sort_order'] ?? 0),
             ];
             if ($data['plan_name'] === '') {
-                throw new RuntimeException('Plan નામ જરૂરી છે.');
+                throw new RuntimeException('Plan name is required.');
             }
             if ($id > 0) {
                 $db->update('plans', $data, 'id = ?', [$id]);
-                $msg = 'Plan update થયો.';
+                $msg = 'Plan updated.';
             } else {
                 $db->insert('plans', $data);
-                $msg = 'નવો plan બન્યો.';
+                $msg = 'New plan created.';
             }
         } elseif ($action === 'toggle' && $id > 0) {
             $db->query("UPDATE `{$plansTable}` SET is_active = 1 - is_active WHERE id = ?", [$id]);
-            $msg = 'Plan status બદલાયો.';
+            $msg = 'Plan status changed.';
         }
         Auth::logAdminActivity((int)Session::get('admin_id'), $action, 'plans', ['plan_id' => $id]);
     } catch (Throwable $ex) {
@@ -60,18 +60,18 @@ $editFeatures = $editPlan ? implode("\n", json_decode((string)$editPlan['feature
 
 <div class="admin-grid-2">
   <div class="admin-card">
-    <h2><?= $editPlan ? 'Plan Edit' : 'નવો Plan' ?></h2>
+    <h2><?= $editPlan ? 'Edit Plan' : 'New Plan' ?></h2>
     <form method="post">
       <?= Security::csrfField() ?>
       <input type="hidden" name="action" value="save">
       <input type="hidden" name="id" value="<?= (int)($editPlan['id'] ?? 0) ?>">
-      <label>નામ</label><input type="text" name="plan_name" value="<?= $e($editPlan['plan_name'] ?? '') ?>" required>
+      <label>Name</label><input type="text" name="plan_name" value="<?= $e($editPlan['plan_name'] ?? '') ?>" required>
       <div class="row-2">
-        <div><label>ભાવ</label><input type="number" step="0.01" name="price" value="<?= $e($editPlan['price'] ?? '0') ?>"></div>
+        <div><label>Price</label><input type="number" step="0.01" name="price" value="<?= $e($editPlan['price'] ?? '0') ?>"></div>
         <div><label>Currency</label><input type="text" name="currency" value="<?= $e($editPlan['currency'] ?? 'INR') ?>"></div>
       </div>
       <div class="row-2">
-        <div><label>Duration (દિવસ)</label><input type="number" name="duration_days" value="<?= (int)($editPlan['duration_days'] ?? 30) ?>"></div>
+        <div><label>Duration (days)</label><input type="number" name="duration_days" value="<?= (int)($editPlan['duration_days'] ?? 30) ?>"></div>
         <div><label>Char Limit (0=unlimited)</label><input type="number" name="char_limit" value="<?= (int)($editPlan['char_limit'] ?? 0) ?>"></div>
       </div>
       <div class="row-2">
@@ -79,18 +79,18 @@ $editFeatures = $editPlan ? implode("\n", json_decode((string)$editPlan['feature
         <div><label>API Daily Limit</label><input type="number" name="api_daily_limit" value="<?= (int)($editPlan['api_daily_limit'] ?? 0) ?>"></div>
       </div>
       <label><input type="checkbox" name="api_access" value="1" <?= (int)($editPlan['api_access'] ?? 0) === 1 ? 'checked' : '' ?>> API Access</label>
-      <label>Features (દરેક line પર એક)</label>
+      <label>Features (one per line)</label>
       <textarea name="features" rows="4"><?= $e($editFeatures) ?></textarea>
       <label>Sort Order</label><input type="number" name="sort_order" value="<?= (int)($editPlan['sort_order'] ?? 0) ?>">
-      <button class="abtn abtn-primary" type="submit">સેવ</button>
+      <button class="abtn abtn-primary" type="submit">Save</button>
       <?php if ($editPlan): ?><a class="abtn" href="plans.php">Cancel</a><?php endif; ?>
     </form>
   </div>
 
   <div class="admin-card">
-    <h2>બધા Plans</h2>
+    <h2>All Plans</h2>
     <table class="atable">
-      <tr><th>નામ</th><th>ભાવ</th><th>API</th><th>Active</th><th></th></tr>
+      <tr><th>Name</th><th>Price</th><th>API</th><th>Active</th><th></th></tr>
       <?php foreach ($plans as $p): ?>
       <tr>
         <td><?= $e($p['plan_name']) ?></td>

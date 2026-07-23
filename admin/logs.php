@@ -2,7 +2,7 @@
 /**
  * લોગ્સ — conversion, API, admin activity, error logs (filter + CSV export).
  */
-$PAGE_TITLE = 'લોગ્સ';
+$PAGE_TITLE = 'Logs';
 require __DIR__ . '/includes/header.php';
 
 $db = Database::getInstance();
@@ -60,13 +60,13 @@ if ($type === 'conversions') {
     usort($files, fn($a, $b) => filemtime($b) <=> filemtime($a));
     if ($files) {
         $errorContent = implode('', array_slice(file($files[0]) ?: [], -200));
-        $errorContent = basename($files[0]) . " (છેલ્લી 200 lines):\n\n" . $errorContent;
+        $errorContent = basename($files[0]) . " (last 200 lines):\n\n" . $errorContent;
     }
 }
 ?>
 <div class="admin-card">
   <div class="filter-row">
-    <?php foreach (['conversions' => 'કન્વર્ઝન', 'api' => 'API', 'admin' => 'Admin Activity', 'errors' => 'Error Files'] as $t => $label): ?>
+    <?php foreach (['conversions' => 'Conversions', 'api' => 'API', 'admin' => 'Admin Activity', 'errors' => 'Error Files'] as $t => $label): ?>
       <a class="abtn <?= $type === $t ? 'abtn-primary' : '' ?>" href="?type=<?= $t ?>"><?= $e($label) ?></a>
     <?php endforeach; ?>
     <?php if ($type !== 'errors'): ?>
@@ -75,9 +75,9 @@ if ($type === 'conversions') {
   </div>
 
   <?php if ($type === 'errors'): ?>
-    <pre class="test-output" style="max-height:520px;overflow:auto"><?= $e($errorContent ?: 'કોઈ log ફાઇલ નથી.') ?></pre>
+    <pre class="test-output" style="max-height:520px;overflow:auto"><?= $e($errorContent ?: 'No log files.') ?></pre>
   <?php elseif (!$rows): ?>
-    <p class="amuted">કોઈ records નથી.</p>
+    <p class="amuted">No records.</p>
   <?php else: ?>
     <div class="table-scroll">
       <table class="atable">

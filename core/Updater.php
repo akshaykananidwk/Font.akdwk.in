@@ -104,10 +104,10 @@ class Updater
             throw new RuntimeException('GitHub request failed: ' . $err);
         }
         if ($status === 401 || $status === 403) {
-            throw new RuntimeException("GitHub authentication failed (HTTP {$status}) — token ચકાસો");
+            throw new RuntimeException("GitHub authentication failed (HTTP {$status}) — check your token");
         }
         if ($status === 404) {
-            throw new RuntimeException('GitHub resource not found (HTTP 404) — repo/branch ચકાસો');
+            throw new RuntimeException('GitHub resource not found (HTTP 404) — check the repo/branch');
         }
         if ($status >= 400) {
             throw new RuntimeException("GitHub API error (HTTP {$status})");
@@ -122,7 +122,7 @@ class Updater
     {
         $settings = self::getSettings();
         if ($settings['repo'] === '') {
-            throw new RuntimeException('GitHub repository configure કરો (Update → Settings)');
+            throw new RuntimeException('Configure the GitHub repository first (Update → Settings)');
         }
         $repo = $settings['repo'];
         $branch = $settings['branch'];
@@ -131,7 +131,7 @@ class Updater
         $commitRes = self::githubRequest("https://api.github.com/repos/{$repo}/commits/{$branch}");
         $commit = json_decode($commitRes['body'], true);
         if (!is_array($commit) || empty($commit['sha'])) {
-            throw new RuntimeException('Commit info મળી નહીં');
+            throw new RuntimeException('Commit info not found');
         }
 
         // Remote version.json
@@ -249,9 +249,9 @@ class Updater
         $logId = null;
 
         // ---- Step 1: Pre-flight ----
-        $this->progress(1, 'Pre-flight checks શરૂ...');
+        $this->progress(1, 'Starting pre-flight checks...');
         if (is_file(UPDATE_LOCK_FILE) && (time() - (int)filemtime(UPDATE_LOCK_FILE)) < 1800) {
-            throw new RuntimeException('બીજું update ચાલુ છે (update.lock). 30 મિનિટ પછી પ્રયત્ન કરો.');
+            throw new RuntimeException('Another update is already running (update.lock). Try again in 30 minutes.');
         }
         @file_put_contents(UPDATE_LOCK_FILE, (string)getmypid());
         @set_time_limit(0);
@@ -261,12 +261,12 @@ class Updater
         $needed = 200 * 1024 * 1024; // અંદાજિત: zip size × 3 ≈ 200MB સલામત મર્યાદા
         if ($freeSpace > 0 && $freeSpace < $needed) {
             @unlink(UPDATE_LOCK_FILE);
-            throw new RuntimeException('Disk space ઓછી છે: ' . Helper::formatBytes((int)$freeSpace) . ' free');
+            throw new RuntimeException('Not enough disk space: ' . Helper::formatBytes((int)$freeSpace) . ' free');
         }
         foreach ([BASE_PATH, STORAGE_PATH, TEMP_PATH, BACKUPS_PATH] as $dir) {
             if (!is_writable($dir)) {
                 @unlink(UPDATE_LOCK_FILE);
-                throw new RuntimeException("Writable નથી: {$dir}");
+                throw new RuntimeException("Not writable: {$dir}");
             }
         }
         $this->progress(1, 'Pre-flight OK — disk: ' . Helper::formatBytes((int)$freeSpace) . ' free');
@@ -283,36 +283,36 @@ class Updater
 
             // ---- Step 2: Maintenance ON ----
             if (!$dryRun) {
-                $this->progress(2, 'Maintenance mode ચાલુ...');
+                $this->progress(2, 'Turning on maintenance mode...');
                 file_put_contents(MAINTENANCE_FLAG, date('c'));
             } else {
-                $this->progress(2, '[DRY RUN] Maintenance skip');
+                $this->progress(2, '[DRY RUN] Maintenance skipped');
             }
 
             // ---- Step 3: Auto Backup (ફરજિયાત) ----
-            $this->progress(3, 'Database backup લેવાય છે...');
+            $this->progress(3, 'Backing up the database...');
             $stamp = date('Ymd_His');
             $this->dbBackupPath = BACKUPS_PATH . "/db_{$fromVersion}_{$stamp}.sql";
             $this->backupDatabase($this->dbBackupPath);
             if (!is_file($this->dbBackupPath) || filesize($this->dbBackupPath) < 100) {
-                throw new RuntimeException('DB backup verify ફેલ — update રોકાયું');
+                throw new RuntimeException('DB backup verification failed — update stopped');
             }
             $this->progress(3, 'DB backup OK: ' . Helper::formatBytes((int)filesize($this->dbBackupPath)));
 
-            $this->progress(3, 'Files backup લેવાય છે...');
+            $this->progress(3, 'Backing up files...');
             $this->filesBackupPath = BACKUPS_PATH . "/files_{$fromVersion}_{$stamp}.zip";
             $this->backupFiles($this->filesBackupPath);
             $zipTest = new ZipArchive();
             if (!is_file($this->filesBackupPath)
                 || filesize($this->filesBackupPath) < 100
                 || $zipTest->open($this->filesBackupPath) !== true) {
-                throw new RuntimeException('Files backup verify ફેલ — update રોકાયું');
+                throw new RuntimeException('Files backup verification failed — update stopped');
             }
             $zipTest->close();
             $this->progress(3, 'Files backup OK: ' . Helper::formatBytes((int)filesize($this->filesBackupPath)));
 
             // ---- Step 4: Download ----
-            $this->progress(4, 'GitHub પરથી download થાય છે...');
+            $this->progress(4, 'Downloading from GitHub...');
             $zipPath = TEMP_PATH . '/update.zip';
             @unlink($zipPath);
             self::githubRequest(
@@ -321,40 +321,40 @@ class Updater
             );
             $zip = new ZipArchive();
             if ($zip->open($zipPath) !== true) {
-                throw new RuntimeException('Downloaded ZIP અમાન્ય છે');
+                throw new RuntimeException('The downloaded ZIP is invalid');
             }
             $this->progress(4, 'Download OK: ' . Helper::formatBytes((int)filesize($zipPath)) . " ({$zip->numFiles} files)");
 
             // ---- Step 5: Extract ----
-            $this->progress(5, 'Extract થાય છે...');
+            $this->progress(5, 'Extracting...');
             $extractDir = TEMP_PATH . '/extracted';
             Helper::rrmdir($extractDir);
             mkdir($extractDir, 0755, true);
             if (!$zip->extractTo($extractDir)) {
                 $zip->close();
-                throw new RuntimeException('Extract ફેલ થયું');
+                throw new RuntimeException('Extraction failed');
             }
             $zip->close();
             // GitHub zip માં એક root folder (repo-hash/) હોય છે
             $rootDirs = glob($extractDir . '/*', GLOB_ONLYDIR) ?: [];
             if (count($rootDirs) !== 1) {
-                throw new RuntimeException('ZIP structure અનપેક્ષિત છે');
+                throw new RuntimeException('Unexpected ZIP structure');
             }
             $sourceDir = $rootDirs[0];
             $this->progress(5, 'Extract OK: ' . basename($sourceDir));
 
             // ---- Step 6: Protected files list ----
-            $this->progress(6, 'Protected files check...');
+            $this->progress(6, 'Checking protected files...');
             $protected = self::protectedPaths();
             $this->progress(6, 'Protected: ' . implode(', ', $protected));
 
             // ---- Step 7: Replace files ----
             $stats = ['copied' => 0, 'skipped' => 0, 'deleted' => 0];
             if ($dryRun) {
-                $this->progress(7, '[DRY RUN] ફાઇલ ફેરફારની યાદી બને છે...');
+                $this->progress(7, '[DRY RUN] Building the list of file changes...');
                 $changes = $this->collectChanges($sourceDir, $protected);
-                $this->progress(7, '[DRY RUN] ' . count($changes['copy']) . ' ફાઇલ બદલાશે, '
-                    . count($changes['skip']) . ' protected skip થશે');
+                $this->progress(7, '[DRY RUN] ' . count($changes['copy']) . ' file(s) will change, '
+                    . count($changes['skip']) . ' protected file(s) will be skipped');
                 $this->finalizeDryRun($logId, $changes);
                 return [
                     'success' => true,
@@ -363,7 +363,7 @@ class Updater
                     'log'     => $this->log,
                 ];
             }
-            $this->progress(7, 'ફાઇલો replace થાય છે...');
+            $this->progress(7, 'Replacing files...');
             $this->copyTree($sourceDir, BASE_PATH, $protected, $stats);
             // delete_manifest.txt — repo માંથી delete થયેલી ફાઇલો (safety: manual list)
             $manifest = $sourceDir . '/delete_manifest.txt';
@@ -385,14 +385,14 @@ class Updater
             $this->progress(7, "Files: {$stats['copied']} copied, {$stats['skipped']} protected skipped, {$stats['deleted']} deleted");
 
             // ---- Step 8: DB Migrations ----
-            $this->progress(8, 'Database migrations ચાલે છે...');
+            $this->progress(8, 'Running database migrations...');
             $ranMigrations = $this->runMigrations();
             $this->progress(8, $ranMigrations === []
-                ? 'કોઈ નવી migration નથી'
+                ? 'No new migrations'
                 : 'Migrations: ' . implode(', ', $ranMigrations));
 
             // ---- Step 9: Finalize ----
-            $this->progress(9, 'Cache clear + finalize...');
+            $this->progress(9, 'Clearing cache + finalizing...');
             Cache::clear();
             if (function_exists('opcache_reset')) {
                 @opcache_reset();
@@ -412,15 +412,15 @@ class Updater
 
             @unlink(MAINTENANCE_FLAG);
             @unlink(UPDATE_LOCK_FILE);
-            $this->progress(9, "Update સફળ! {$fromVersion} → " . ($newLocal['version'] ?? $toVersion), 'success');
+            $this->progress(9, "Update successful! {$fromVersion} → " . ($newLocal['version'] ?? $toVersion), 'success');
 
             // Admin ને email
             $adminEmail = App::config()['site']['admin_email'] ?? '';
             if ($adminEmail !== '') {
                 Mailer::sendTemplate(
                     $adminEmail,
-                    '✅ Site update સફળ — v' . ($newLocal['version'] ?? $toVersion),
-                    'તમારી સાઇટ સફળતાપૂર્વક update થઈ ગઈ.<br>Version: ' . Helper::e($fromVersion)
+                    '✅ Site update successful — v' . ($newLocal['version'] ?? $toVersion),
+                    'Your site was updated successfully.<br>Version: ' . Helper::e($fromVersion)
                     . ' → ' . Helper::e((string)($newLocal['version'] ?? $toVersion))
                     . '<br>Commit: ' . Helper::e($check['commit_hash'])
                 );
@@ -429,7 +429,7 @@ class Updater
             return ['success' => true, 'log' => $this->log];
         } catch (Throwable $e) {
             // ---- Step 10: AUTO ROLLBACK ----
-            $this->progress(10, '❌ ભૂલ: ' . $e->getMessage() . ' — rollback શરૂ...', 'error');
+            $this->progress(10, '❌ Error: ' . $e->getMessage() . ' — starting rollback...', 'error');
             $rolledBack = $this->rollback();
             @unlink(MAINTENANCE_FLAG);
             @unlink(UPDATE_LOCK_FILE);
@@ -449,14 +449,14 @@ class Updater
             if ($adminEmail !== '') {
                 Mailer::sendTemplate(
                     $adminEmail,
-                    '⚠ Site update ' . ($rolledBack ? 'rollback થયું' : 'ફેલ થયું'),
-                    'Update માં ભૂલ: ' . Helper::e($e->getMessage())
-                    . '<br>Rollback: ' . ($rolledBack ? 'સફળ — સાઇટ પહેલા જેવી ચાલુ છે' : 'મેન્યુઅલ restore જરૂરી!')
+                    '⚠ Site update ' . ($rolledBack ? 'rolled back' : 'failed'),
+                    'Update error: ' . Helper::e($e->getMessage())
+                    . '<br>Rollback: ' . ($rolledBack ? 'successful — the site is running as before' : 'manual restore required!')
                 );
             }
             $this->progress(10, $rolledBack
-                ? '✓ Rollback સફળ — સાઇટ પહેલા જેવી ચાલુ છે'
-                : '✗ Rollback ફેલ — storage/backups માંથી મેન્યુઅલ restore કરો', 'rolled_back');
+                ? '✓ Rollback successful — the site is running as before'
+                : '✗ Rollback failed — restore manually from storage/backups', 'rolled_back');
             throw $e;
         }
     }
@@ -475,7 +475,7 @@ class Updater
         $pdo = $db->pdo();
         $fp = fopen($path, 'wb');
         if ($fp === false) {
-            throw new RuntimeException("Backup file ખોલી શકાયું નહીં: {$path}");
+            throw new RuntimeException("Could not open backup file: {$path}");
         }
         fwrite($fp, "-- GFC Database Backup " . date('c') . "\nSET FOREIGN_KEY_CHECKS=0;\n-- STMT_END\n");
         $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
@@ -511,7 +511,7 @@ class Updater
     {
         $zip = new ZipArchive();
         if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new RuntimeException("Backup zip બની શક્યું નહીં: {$path}");
+            throw new RuntimeException("Could not create backup zip: {$path}");
         }
         $excludes = ['storage/backups', 'storage/temp', 'storage/cache', 'storage/logs', '.git'];
         $baseLen = strlen(BASE_PATH) + 1;
@@ -556,7 +556,7 @@ class Updater
                 if ($zip->open($filesBackup) === true) {
                     $zip->extractTo(BASE_PATH);
                     $zip->close();
-                    $this->progress(10, 'Files restore થયા');
+                    $this->progress(10, 'Files restored');
                 } else {
                     $ok = false;
                 }
@@ -570,7 +570,7 @@ class Updater
         if ($dbBackup !== null && is_file($dbBackup)) {
             try {
                 $this->restoreDatabase($dbBackup);
-                $this->progress(10, 'Database restore થયો');
+                $this->progress(10, 'Database restored');
             } catch (Throwable $e) {
                 Logger::error('DB rollback failed: ' . $e->getMessage(), 'update');
                 $ok = false;
@@ -656,7 +656,7 @@ class Updater
                 $this->copyTree($srcPath, $dstPath, $protected, $stats, $relPath);
             } else {
                 if (!copy($srcPath, $dstPath)) {
-                    throw new RuntimeException("Copy ફેલ: {$relPath}");
+                    throw new RuntimeException("Copy failed: {$relPath}");
                 }
                 $stats['copied']++;
             }
@@ -759,7 +759,7 @@ class Updater
                 if ($pdo->inTransaction()) {
                     $pdo->rollBack();
                 }
-                throw new RuntimeException("Migration ફેલ ({$name}): " . $e->getMessage());
+                throw new RuntimeException("Migration failed ({$name}): " . $e->getMessage());
             }
         }
         return $executed;

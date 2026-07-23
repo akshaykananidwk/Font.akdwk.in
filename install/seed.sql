@@ -14,13 +14,13 @@ ON DUPLICATE KEY UPDATE name = VALUES(name);
 -- Settings
 INSERT INTO `{{prefix}}settings` (setting_key, setting_value, setting_group) VALUES
 ('site_name', 'Gujarati Font Converter', 'general'),
-('site_tagline', 'મફત ઓનલાઇન ગુજરાતી ફોન્ટ કન્વર્ટર', 'general'),
+('site_tagline', 'Free Online Gujarati Font Converter', 'general'),
 ('demo_char_limit', '200', 'general'),
 ('demo_attempt_limit', '20', 'general'),
 ('rate_limit_per_min', '30', 'general'),
 ('maintenance_mode', '0', 'general'),
-('default_meta_title', 'Gujarati Font Converter | ગુજરાતી ફોન્ટ કન્વર્ટર - Legacy to Unicode', 'seo'),
-('default_meta_description', 'Free online Gujarati font converter. Convert LMG, Shree Guj, Saral, Terafont, Akruti and 90+ legacy fonts to Unicode (Shruti) and back. મફત ગુજરાતી યુનિકોડ કન્વર્ટર.', 'seo'),
+('default_meta_title', 'Gujarati Font Converter — Legacy to Unicode (LMG, Shree Guj, Kruti Dev)', 'seo'),
+('default_meta_description', 'Free online Gujarati font converter. Convert LMG, Shree Guj, Saral, Terafont, Akruti and 90+ legacy fonts to Unicode (Shruti) and back.', 'seo'),
 ('google_analytics_id', '', 'seo'),
 ('google_site_verification', '', 'seo'),
 ('bing_site_verification', '', 'seo'),
@@ -41,10 +41,10 @@ ON DUPLICATE KEY UPDATE setting_value = setting_value;
 
 -- Plans
 INSERT INTO `{{prefix}}plans` (id, plan_name, price, currency, duration_days, char_limit, daily_limit, api_access, api_daily_limit, features, is_active, sort_order) VALUES
-(1, 'Free Demo', 0.00, 'INR', 36500, 200, 20, 0, 0, '["200 અક્ષર સુધી", "20 પ્રયાસ/દિવસ", "બધા ફોન્ટ"]', 1, 1),
-(2, 'Basic', 99.00, 'INR', 30, 0, 100, 0, 0, '["અમર્યાદિત અક્ષર", "100 કન્વર્ઝન/દિવસ", "ફાઇલ અપલોડ"]', 1, 2),
-(3, 'Pro', 299.00, 'INR', 30, 0, 0, 1, 1000, '["અમર્યાદિત કન્વર્ઝન", "API access - 1000 calls/દિવસ", "ફાઇલ અપલોડ", "Priority support"]', 1, 3),
-(4, 'Business', 999.00, 'INR', 30, 0, 0, 1, 10000, '["અમર્યાદિત બધું", "API - 10,000 calls/દિવસ", "Batch API", "Dedicated support"]', 1, 4)
+(1, 'Free Demo', 0.00, 'INR', 36500, 200, 20, 0, 0, '["Up to 200 characters", "20 attempts/day", "All fonts"]', 1, 1),
+(2, 'Basic', 99.00, 'INR', 30, 0, 100, 0, 0, '["Unlimited characters", "100 conversions/day", "File upload"]', 1, 2),
+(3, 'Pro', 299.00, 'INR', 30, 0, 0, 1, 1000, '["Unlimited conversions", "API access - 1000 calls/day", "File upload", "Priority support"]', 1, 3),
+(4, 'Business', 999.00, 'INR', 30, 0, 0, 1, 10000, '["Everything unlimited", "API - 10,000 calls/day", "Batch API", "Dedicated support"]', 1, 4)
 ON DUPLICATE KEY UPDATE plan_name = VALUES(plan_name);
 
 -- Static pages
@@ -57,7 +57,7 @@ ON DUPLICATE KEY UPDATE title = VALUES(title);
 
 -- Blog category
 INSERT INTO `{{prefix}}blog_categories` (id, name, slug, description) VALUES
-(1, 'ટ્યુટોરિયલ', 'tutorials', 'ફોન્ટ કન્વર્ઝન અને ટાઇપિંગ ટ્યુટોરિયલ')
+(1, 'Tutorials', 'tutorials', 'Font conversion and typing tutorials')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 INSERT INTO `{{prefix}}fonts` (language_id, font_name, font_slug, mapping_file, font_family, is_active, is_popular, sort_order) VALUES

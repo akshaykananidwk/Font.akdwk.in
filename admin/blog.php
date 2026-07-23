@@ -2,7 +2,7 @@
 /**
  * બ્લોગ મેનેજર — posts + categories.
  */
-$PAGE_TITLE = 'બ્લોગ';
+$PAGE_TITLE = 'Blog';
 require __DIR__ . '/includes/header.php';
 
 $db = Database::getInstance();
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
                 'author_id'        => (int)Session::get('admin_id'),
             ];
             if ($data['slug'] === '' || $data['title'] === '') {
-                throw new RuntimeException('Slug અને title જરૂરી છે.');
+                throw new RuntimeException('Slug and title are required.');
             }
             if ($status === 'published') {
                 $existing = $id > 0 ? $db->fetch("SELECT published_at FROM `{$postsTable}` WHERE id = ?", [$id]) : null;
@@ -41,21 +41,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
             }
             if ($id > 0) {
                 $db->update('blog_posts', $data, 'id = ?', [$id]);
-                $msg = 'Post update થયો.';
+                $msg = 'Post updated.';
             } else {
                 $db->insert('blog_posts', $data);
-                $msg = 'નવો post બન્યો.';
+                $msg = 'New post created.';
             }
         } elseif ($action === 'delete_post' && $id > 0) {
             $db->query("DELETE FROM `{$postsTable}` WHERE id = ?", [$id]);
-            $msg = 'Post delete થયો.';
+            $msg = 'Post deleted.';
         } elseif ($action === 'save_category') {
             $name = mb_substr(trim((string)($_POST['cat_name'] ?? '')), 0, 100);
             if ($name === '') {
-                throw new RuntimeException('Category નામ જરૂરી.');
+                throw new RuntimeException('Category name is required.');
             }
             $db->insert('blog_categories', ['name' => $name, 'slug' => Helper::slugify($name)]);
-            $msg = 'Category બની.';
+            $msg = 'Category created.';
         }
         Auth::logAdminActivity((int)Session::get('admin_id'), $action, 'blog', ['id' => $id]);
     } catch (Throwable $ex) {
@@ -74,7 +74,7 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
 <?php if ($err): ?><div class="admin-alert alert-err">⚠ <?= $e($err) ?></div><?php endif; ?>
 
 <div class="admin-card">
-  <h2><?= $editPost ? 'Post Edit' : 'નવો Post' ?></h2>
+  <h2><?= $editPost ? 'Edit Post' : 'New Post' ?></h2>
   <form method="post">
     <?= Security::csrfField() ?>
     <input type="hidden" name="action" value="save_post">
@@ -91,7 +91,7 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
       <div>
         <label>Category</label>
         <select name="category_id">
-          <option value="0">— કોઈ નહીં —</option>
+          <option value="0">— None —</option>
           <?php foreach ($cats as $c): ?>
             <option value="<?= (int)$c['id'] ?>" <?= (int)($editPost['category_id'] ?? 0) === (int)$c['id'] ? 'selected' : '' ?>><?= $e($c['name']) ?></option>
           <?php endforeach; ?>
@@ -110,14 +110,14 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
       <option value="draft" <?= ($editPost['status'] ?? 'draft') === 'draft' ? 'selected' : '' ?>>Draft</option>
       <option value="published" <?= ($editPost['status'] ?? '') === 'published' ? 'selected' : '' ?>>Published</option>
     </select>
-    <button class="abtn abtn-primary" type="submit">સેવ</button>
+    <button class="abtn abtn-primary" type="submit">Save</button>
     <?php if ($editPost): ?><a class="abtn" href="blog.php">Cancel</a><?php endif; ?>
   </form>
 </div>
 
 <div class="admin-grid-2">
   <div class="admin-card">
-    <h2>બધા Posts</h2>
+    <h2>All Posts</h2>
     <table class="atable">
       <tr><th>Title</th><th>Status</th><th>Views</th><th></th></tr>
       <?php foreach ($posts as $p): ?>
@@ -141,8 +141,8 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
     <form method="post" class="filter-row">
       <?= Security::csrfField() ?>
       <input type="hidden" name="action" value="save_category">
-      <input type="text" name="cat_name" placeholder="નવી category..." required>
-      <button class="abtn" type="submit">+ ઉમેરો</button>
+      <input type="text" name="cat_name" placeholder="New category..." required>
+      <button class="abtn" type="submit">+ Add</button>
     </form>
     <table class="atable">
       <?php foreach ($cats as $c): ?>

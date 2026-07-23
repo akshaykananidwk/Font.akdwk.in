@@ -14,13 +14,13 @@ class ConverterController
     public static function convert(): void
     {
         if (!Security::verifyCsrf()) {
-            Helper::jsonResponse(['success' => false, 'error' => 'Invalid CSRF token. Page refresh કરો.'], 403);
+            Helper::jsonResponse(['success' => false, 'error' => 'Invalid CSRF token. Please refresh the page.'], 403);
         }
 
         $ip = Helper::clientIp();
         $ratePerMin = (int)App::setting('rate_limit_per_min', DEFAULT_RATE_LIMIT_PER_MIN);
         if (!Security::rateLimit($ip, 'convert', $ratePerMin, 60)) {
-            Helper::jsonResponse(['success' => false, 'error' => 'ઘણી બધી requests. એક મિનિટ પછી પ્રયત્ન કરો.'], 429);
+            Helper::jsonResponse(['success' => false, 'error' => 'Too many requests. Please try again in a minute.'], 429);
         }
 
         $text = Security::cleanInput((string)($_POST['text'] ?? ''));
@@ -29,10 +29,10 @@ class ConverterController
         $preserveHtml = !empty($_POST['preserve_html']);
 
         if ($text === '') {
-            Helper::jsonResponse(['success' => false, 'error' => 'ટેક્સ્ટ ખાલી છે.'], 400);
+            Helper::jsonResponse(['success' => false, 'error' => 'The text is empty.'], 400);
         }
         if ($fontSlug === '') {
-            Helper::jsonResponse(['success' => false, 'error' => 'ફોન્ટ પસંદ કરો.'], 400);
+            Helper::jsonResponse(['success' => false, 'error' => 'Please select a font.'], 400);
         }
 
         $charCount = Helper::charCount($text);
@@ -47,7 +47,7 @@ class ConverterController
             if ($charCount > $charLimit) {
                 Helper::jsonResponse([
                     'success' => false,
-                    'error'   => "Demo મર્યાદા: {$charLimit} અક્ષર. તમારો ટેક્સ્ટ {$charCount} અક્ષરનો છે. અમર્યાદિત ઉપયોગ માટે plan લો.",
+                    'error'   => "Demo limit: {$charLimit} characters. Your text has {$charCount} characters. Get a plan for unlimited use.",
                     'upgrade' => true,
                 ], 403);
             }
@@ -56,7 +56,7 @@ class ConverterController
             if ($demo['attempts_used'] >= $attemptLimit) {
                 Helper::jsonResponse([
                     'success' => false,
-                    'error'   => "આજની {$attemptLimit} demo પ્રયાસની મર્યાદા પૂરી થઈ. 24 કલાક પછી reset થશે, અથવા plan લો.",
+                    'error'   => "You have used all {$attemptLimit} demo attempts for today. It resets after 24 hours, or get a plan.",
                     'upgrade' => true,
                 ], 403);
             }

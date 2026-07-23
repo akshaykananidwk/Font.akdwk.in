@@ -1,33 +1,41 @@
 <?php
 /**
  * GitHub One-Click Update — settings, check, update now (live progress), history.
- * ફક્ત super_admin; update શરૂ કરતાં પહેલા password re-verify.
+ * super_admin only. No password re-entry required (CSRF + super-admin session are enough).
  */
-$REQUIRE_SUPER = true;
-$PAGE_TITLE = 'અપડેટ';
-require __DIR__ . '/includes/header.php';
 
-$db = Database::getInstance();
-$msg = '';
-$err = '';
-$checkResult = null;
+/*
+ * IMPORTANT: The AJAX endpoints (run_update, progress) MUST respond with pure JSON.
+ * They therefore run BEFORE includes/header.php (which prints the <!DOCTYPE html> admin
+ * layout). Emitting HTML before the JSON is exactly what caused the
+ * "Unexpected token '<' ... is not valid JSON" error.
+ */
+$__ajaxAction = $_POST['action'] ?? $_GET['action'] ?? '';
+if ($__ajaxAction === 'run_update' || $__ajaxAction === 'progress') {
+    define('BASE_PATH', dirname(__DIR__));
+    require_once BASE_PATH . '/config/constants.php';
+    require_once CORE_PATH . '/App.php';
+    App::bootstrap();
 
-// ---- AJAX: progress polling ----
-if (($_GET['action'] ?? '') === 'progress') {
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(Updater::readProgress() ?? ['state' => 'idle'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+    header('X-Robots-Tag: noindex, nofollow');
 
-// ---- AJAX: run update (long request; UI progress poll કરે છે) ----
-if (($_POST['action'] ?? '') === 'run_update') {
-    header('Content-Type: application/json; charset=utf-8');
-    if (!Security::verifyCsrf()) {
-        echo json_encode(['success' => false, 'error' => 'CSRF token અમાન્ય']);
+    // Must be a logged-in super_admin — respond with JSON (never redirect/HTML)
+    if (!Auth::isAdminLoggedIn() || Session::get('admin_role') !== 'super_admin') {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Not authorized. Please log in again.']);
         exit;
     }
-    if (!Auth::reverifyAdminPassword((string)($_POST['admin_password'] ?? ''))) {
-        echo json_encode(['success' => false, 'error' => 'Admin password ખોટો છે']);
+
+    // Progress polling
+    if ($__ajaxAction === 'progress') {
+        echo json_encode(Updater::readProgress() ?? ['state' => 'idle'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // Run the update (long request; the UI polls ?action=progress meanwhile)
+    if (!Security::verifyCsrf()) {
+        echo json_encode(['success' => false, 'error' => 'Invalid CSRF token. Please refresh the page.']);
         exit;
     }
     $dryRun = !empty($_POST['dry_run']);
@@ -42,6 +50,16 @@ if (($_POST['action'] ?? '') === 'run_update') {
     exit;
 }
 
+// ---------------- Normal page (HTML) ----------------
+$REQUIRE_SUPER = true;
+$PAGE_TITLE = 'Update';
+require __DIR__ . '/includes/header.php';
+
+$db = Database::getInstance();
+$msg = '';
+$err = '';
+$checkResult = null;
+
 // ---- POST: settings / check ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
     $action = (string)($_POST['action'] ?? '');
@@ -53,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
                 (string)($_POST['github_token'] ?? ''),
                 (string)($_POST['frequency'] ?? 'manual')
             );
-            $msg = 'Update settings સેવ થયા (token encrypted).';
+            $msg = 'Update settings saved (token stored encrypted).';
             Auth::logAdminActivity((int)Session::get('admin_id'), 'save_update_settings', 'update', ['repo' => $_POST['github_repo'] ?? '']);
         } elseif ($action === 'check') {
             $checkResult = Updater::checkForUpdate();
@@ -84,22 +102,22 @@ if (($logId = (int)($_GET['view_log'] ?? 0)) > 0) {
       <input type="text" name="github_repo" value="<?= $e($settings['repo']) ?>" placeholder="username/my-site" required>
       <label>Branch</label>
       <input type="text" name="github_branch" value="<?= $e($settings['branch']) ?>">
-      <label>Personal Access Token (private repo માટે — encrypted store થાય છે)</label>
-      <input type="password" name="github_token" value="" placeholder="<?= $settings['token'] !== '' ? '•••••• (સેવ થયેલો છે — ખાલી રાખો તો બદલાય નહીં)' : 'ghp_...' ?>" autocomplete="new-password">
+      <label>Personal Access Token (for private repos — stored encrypted)</label>
+      <input type="password" name="github_token" value="" placeholder="<?= $settings['token'] !== '' ? '•••••• (saved — leave empty to keep unchanged)' : 'ghp_...' ?>" autocomplete="new-password">
       <label>Auto-check</label>
       <select name="frequency">
         <?php foreach (['manual' => 'Manual', 'daily' => 'Daily (cron)', 'weekly' => 'Weekly (cron)'] as $val => $label): ?>
           <option value="<?= $val ?>" <?= $settings['frequency'] === $val ? 'selected' : '' ?>><?= $label ?></option>
         <?php endforeach; ?>
       </select>
-      <button class="abtn abtn-primary" type="submit">સેવ</button>
+      <button class="abtn abtn-primary" type="submit">Save</button>
     </form>
-    <p class="amuted">એકવાર સેવ કર્યા પછી ફરી ક્યારેય ફાઇલ upload કરવાની જરૂર નથી — બધું અહીંથી થાય છે.</p>
+    <p class="amuted">Once saved, you never need to upload files again — everything happens from here.</p>
   </div>
 
   <div class="admin-card">
     <h2>🔍 Update Check</h2>
-    <p>હાલનું વર્ઝન: <strong>v<?= $e($localVersion['version'] ?? APP_VERSION) ?></strong></p>
+    <p>Current version: <strong>v<?= $e($localVersion['version'] ?? APP_VERSION) ?></strong></p>
     <form method="post">
       <?= Security::csrfField() ?>
       <input type="hidden" name="action" value="check">
@@ -109,27 +127,26 @@ if (($logId = (int)($_GET['view_log'] ?? 0)) > 0) {
     <?php if ($checkResult !== null): ?>
       <hr class="asep">
       <?php if ($checkResult['is_latest']): ?>
-        <div class="admin-alert alert-ok">✓ તમે નવીનતમ વર્ઝન પર છો (v<?= $e($checkResult['current_version']) ?>)</div>
+        <div class="admin-alert alert-ok">✓ You are on the latest version (v<?= $e($checkResult['current_version']) ?>)</div>
       <?php else: ?>
-        <div class="admin-alert alert-warn">🆕 નવું વર્ઝન ઉપલબ્ધ: v<?= $e((string)$checkResult['remote_version']) ?></div>
+        <div class="admin-alert alert-warn">🆕 New version available: v<?= $e((string)$checkResult['remote_version']) ?></div>
       <?php endif; ?>
       <table class="atable">
         <tr><td>Commit</td><td><code><?= $e($checkResult['commit_hash']) ?></code></td></tr>
         <tr><td>Message</td><td><?= $e(mb_substr($checkResult['commit_message'], 0, 140)) ?></td></tr>
         <tr><td>Author</td><td><?= $e($checkResult['commit_author']) ?></td></tr>
         <tr><td>Date</td><td><?= $e($checkResult['commit_date']) ?></td></tr>
-        <tr><td>નવી Migrations</td><td><?= $checkResult['new_migrations'] ? $e(implode(', ', $checkResult['new_migrations'])) : 'નથી' ?></td></tr>
+        <tr><td>New Migrations</td><td><?= $checkResult['new_migrations'] ? $e(implode(', ', $checkResult['new_migrations'])) : 'None' ?></td></tr>
       </table>
       <?php if ($checkResult['changelog']): ?>
         <details><summary>Changelog</summary><pre class="test-output"><?= $e($checkResult['changelog']) ?></pre></details>
       <?php endif; ?>
 
       <hr class="asep">
-      <h3>Update ચલાવો</h3>
-      <label>Admin Password (ફરી confirm)</label>
-      <input type="password" id="updPassword" autocomplete="current-password">
+      <h3>Run Update</h3>
+      <p class="amuted">A full backup is taken automatically first, and the site rolls back automatically if anything fails.</p>
       <div style="margin-top:10px">
-        <button class="abtn" id="btnDryRun" type="button">🔬 Dry Run (ફક્ત preview)</button>
+        <button class="abtn" id="btnDryRun" type="button">🔬 Dry Run (preview only)</button>
         <button class="abtn abtn-danger" id="btnUpdateNow" type="button">🚀 Update Now</button>
       </div>
     <?php endif; ?>
@@ -147,7 +164,7 @@ if (($logId = (int)($_GET['view_log'] ?? 0)) > 0) {
   <?php if ($viewLog): ?>
     <h3>Log #<?= (int)$viewLog['id'] ?> (<?= $e($viewLog['status']) ?>)</h3>
     <pre class="test-output" style="max-height:300px;overflow:auto"><?= $e((string)$viewLog['log_output']) ?></pre>
-    <p><a class="abtn abtn-xs" href="update.php">બંધ કરો</a></p>
+    <p><a class="abtn abtn-xs" href="update.php">Close</a></p>
   <?php endif; ?>
   <table class="atable">
     <tr><th>#</th><th>From → To</th><th>Commit</th><th>Status</th><th>Started</th><th></th></tr>
@@ -161,9 +178,9 @@ if (($logId = (int)($_GET['view_log'] ?? 0)) > 0) {
       <td><a class="abtn abtn-xs" href="?view_log=<?= (int)$h['id'] ?>">Log</a></td>
     </tr>
     <?php endforeach; ?>
-    <?php if (!$history): ?><tr><td colspan="6" class="amuted">હજી કોઈ update નથી થયું.</td></tr><?php endif; ?>
+    <?php if (!$history): ?><tr><td colspan="6" class="amuted">No updates yet.</td></tr><?php endif; ?>
   </table>
-  <p class="amuted">Manual rollback માટે <a href="backup.php">બેકઅપ પેજ</a> વાપરો.</p>
+  <p class="amuted">For a manual rollback, use the <a href="backup.php">Backup page</a>.</p>
 </div>
 
 <script>
@@ -178,8 +195,8 @@ if (($logId = (int)($_GET['view_log'] ?? 0)) > 0) {
         const res = await fetch('update.php?action=progress');
         const p = await res.json();
         if (p.log) {
-          document.getElementById('updLog').textContent = p.log.join('\n');
           const el = document.getElementById('updLog');
+          el.textContent = p.log.join('\n');
           el.scrollTop = el.scrollHeight;
         }
         if (p.step) {
@@ -194,12 +211,10 @@ if (($logId = (int)($_GET['view_log'] ?? 0)) > 0) {
   }
 
   async function runUpdate(dryRun) {
-    const pw = document.getElementById('updPassword').value;
-    if (!pw) { alert('Admin password આપો.'); return; }
-    if (!dryRun && !confirm('ખરેખર update કરવું છે? Backup આપમેળે લેવાશે અને ભૂલ આવે તો rollback થશે.')) return;
+    if (!dryRun && !confirm('Run the update now? A backup is taken automatically, and the site rolls back if anything fails.')) return;
     startPolling();
-    document.getElementById('updLog').textContent = '⏳ Update શરૂ થાય છે...';
-    const body = new URLSearchParams({ action: 'run_update', csrf_token: csrf, admin_password: pw });
+    document.getElementById('updLog').textContent = '⏳ Starting update...';
+    const body = new URLSearchParams({ action: 'run_update', csrf_token: csrf });
     if (dryRun) body.append('dry_run', '1');
     try {
       const res = await fetch('update.php', { method: 'POST', body });
@@ -207,11 +222,11 @@ if (($logId = (int)($_GET['view_log'] ?? 0)) > 0) {
       clearInterval(pollTimer);
       if (json.success) {
         document.getElementById('updProgressBar').style.width = '100%';
-        document.getElementById('updLog').textContent += '\n\n✅ ' + (dryRun ? 'Dry run પૂરું.' : 'Update સફળ! Page refresh કરો.');
+        document.getElementById('updLog').textContent += '\n\n✅ ' + (dryRun ? 'Dry run complete.' : 'Update successful! Please refresh the page.');
         if (json.result && json.result.changes) {
           const ch = json.result.changes;
           document.getElementById('updLog').textContent +=
-            '\n\nબદલાશે: ' + ch.copy.length + ' | નવી: ' + ch.new.length + ' | Protected skip: ' + ch.skip.length +
+            '\n\nWill change: ' + ch.copy.length + ' | New: ' + ch.new.length + ' | Protected (skipped): ' + ch.skip.length +
             '\n\n' + ch.copy.slice(0, 50).join('\n');
         }
       } else {
@@ -219,7 +234,8 @@ if (($logId = (int)($_GET['view_log'] ?? 0)) > 0) {
       }
     } catch (e) {
       clearInterval(pollTimer);
-      document.getElementById('updLog').textContent += '\n\n❌ Request ફેલ: ' + e.message + '\n(Update કદાચ ચાલુ છે — progress ઉપર જુઓ, page refresh કરો)';
+      document.getElementById('updLog').textContent += '\n\n❌ Request failed: ' + e.message +
+        '\n(The update may still be running — watch the progress above and refresh the page.)';
     }
   }
 

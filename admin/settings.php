@@ -2,7 +2,7 @@
 /**
  * સેટિંગ્સ — demo limits, SMTP, maintenance mode, API.
  */
-$PAGE_TITLE = 'સેટિંગ્સ';
+$PAGE_TITLE = 'Settings';
 require __DIR__ . '/includes/header.php';
 
 $msg = '';
@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
             App::setSetting('demo_attempt_limit', (string)max(1, (int)($_POST['demo_attempt_limit'] ?? 20)), 'general');
             App::setSetting('rate_limit_per_min', (string)max(5, (int)($_POST['rate_limit_per_min'] ?? 30)), 'general');
             App::setSetting('api_enabled', !empty($_POST['api_enabled']) ? '1' : '0', 'api');
-            $msg = 'General settings સેવ થયા.';
+            $msg = 'General settings saved.';
         } elseif ($action === 'save_smtp') {
             App::setSetting('smtp_enabled', !empty($_POST['smtp_enabled']) ? '1' : '0', 'email');
             App::setSetting('email_from', trim((string)($_POST['email_from'] ?? '')), 'email');
@@ -28,22 +28,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
                 App::setSetting('smtp_pass', (string)$_POST['smtp_pass'], 'email');
             }
             App::setSetting('smtp_encryption', in_array($_POST['smtp_encryption'] ?? '', ['tls', 'ssl', 'none'], true) ? (string)$_POST['smtp_encryption'] : 'tls', 'email');
-            $msg = 'Email settings સેવ થયા.';
+            $msg = 'Email settings saved.';
         } elseif ($action === 'toggle_maintenance') {
             if (App::isMaintenanceMode()) {
                 @unlink(MAINTENANCE_FLAG);
-                $msg = 'Maintenance mode બંધ થયો.';
+                $msg = 'Maintenance mode turned off.';
             } else {
                 file_put_contents(MAINTENANCE_FLAG, date('c'));
-                $msg = 'Maintenance mode ચાલુ થયો (admin session ને અસર નહીં).';
+                $msg = 'Maintenance mode turned on (admin sessions are unaffected).';
             }
         } elseif ($action === 'test_email') {
             $to = App::config()['site']['admin_email'] ?? '';
-            $ok = $to !== '' && Mailer::sendTemplate($to, 'Test Email — ' . App::setting('site_name', APP_NAME), 'આ test email છે. Settings બરાબર છે! ✓');
-            $msg = $ok ? "Test email મોકલાયો ({$to})." : 'Email મોકલી શકાયો નહીં — logs જુઓ.';
+            $ok = $to !== '' && Mailer::sendTemplate($to, 'Test Email — ' . App::setting('site_name', APP_NAME), 'This is a test email. Your settings are working! ✓');
+            $msg = $ok ? "Test email sent ({$to})." : 'Could not send email — check the logs.';
         } elseif ($action === 'clear_cache') {
             $n = Cache::clear();
-            $msg = "Cache clear થયું ({$n} ફાઇલ).";
+            $msg = "Cache cleared ({$n} files).";
         }
         Auth::logAdminActivity((int)Session::get('admin_id'), $action, 'settings', []);
     } catch (Throwable $ex) {
@@ -64,19 +64,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
       <input type="text" name="site_name" value="<?= $e((string)App::setting('site_name', '')) ?>">
       <div class="row-2">
         <div><label>Demo Char Limit</label><input type="number" name="demo_char_limit" value="<?= (int)App::setting('demo_char_limit', 200) ?>"></div>
-        <div><label>Demo Attempts/દિવસ</label><input type="number" name="demo_attempt_limit" value="<?= (int)App::setting('demo_attempt_limit', 20) ?>"></div>
+        <div><label>Demo Attempts/day</label><input type="number" name="demo_attempt_limit" value="<?= (int)App::setting('demo_attempt_limit', 20) ?>"></div>
       </div>
       <label>Rate Limit (requests/min/IP)</label>
       <input type="number" name="rate_limit_per_min" value="<?= (int)App::setting('rate_limit_per_min', 30) ?>">
-      <label><input type="checkbox" name="api_enabled" value="1" <?= App::setting('api_enabled', '1') === '1' ? 'checked' : '' ?>> API ચાલુ</label>
-      <button class="abtn abtn-primary" type="submit">સેવ</button>
+      <label><input type="checkbox" name="api_enabled" value="1" <?= App::setting('api_enabled', '1') === '1' ? 'checked' : '' ?>> API enabled</label>
+      <button class="abtn abtn-primary" type="submit">Save</button>
     </form>
     <hr class="asep">
     <form method="post" class="inline">
       <?= Security::csrfField() ?>
       <input type="hidden" name="action" value="toggle_maintenance">
       <button class="abtn <?= App::isMaintenanceMode() ? 'abtn-primary' : 'abtn-danger' ?>" type="submit">
-        <?= App::isMaintenanceMode() ? '▶ Maintenance બંધ કરો' : '🔧 Maintenance ચાલુ કરો' ?>
+        <?= App::isMaintenanceMode() ? '▶ Turn Maintenance Off' : '🔧 Turn Maintenance On' ?>
       </button>
     </form>
     <form method="post" class="inline">
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
     <form method="post">
       <?= Security::csrfField() ?>
       <input type="hidden" name="action" value="save_smtp">
-      <label><input type="checkbox" name="smtp_enabled" value="1" <?= App::setting('smtp_enabled', '0') === '1' ? 'checked' : '' ?>> SMTP વાપરો (નહીં તો PHP mail())</label>
+      <label><input type="checkbox" name="smtp_enabled" value="1" <?= App::setting('smtp_enabled', '0') === '1' ? 'checked' : '' ?>> Use SMTP (otherwise PHP mail())</label>
       <label>From Email</label>
       <input type="email" name="email_from" value="<?= $e((string)App::setting('email_from', '')) ?>">
       <div class="row-2">
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
       </div>
       <div class="row-2">
         <div><label>Username</label><input type="text" name="smtp_user" value="<?= $e((string)App::setting('smtp_user', '')) ?>"></div>
-        <div><label>Password (ખાલી = જૂનો રહે)</label><input type="password" name="smtp_pass" value=""></div>
+        <div><label>Password (empty = keep existing)</label><input type="password" name="smtp_pass" value=""></div>
       </div>
       <label>Encryption</label>
       <select name="smtp_encryption">
@@ -108,13 +108,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
           <option value="<?= $enc ?>" <?= App::setting('smtp_encryption', 'tls') === $enc ? 'selected' : '' ?>><?= strtoupper($enc) ?></option>
         <?php endforeach; ?>
       </select>
-      <button class="abtn abtn-primary" type="submit">સેવ</button>
+      <button class="abtn abtn-primary" type="submit">Save</button>
     </form>
     <hr class="asep">
     <form method="post" class="inline">
       <?= Security::csrfField() ?>
       <input type="hidden" name="action" value="test_email">
-      <button class="abtn" type="submit">✉ Test Email મોકલો</button>
+      <button class="abtn" type="submit">✉ Send Test Email</button>
     </form>
   </div>
 </div>

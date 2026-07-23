@@ -42,18 +42,18 @@ if (!empty($showFaq) || !empty($isFaq)) {
         'mainEntity' => [
             [
                 '@type'          => 'Question',
-                'name'           => 'ગુજરાતી ફોન્ટ કન્વર્ટર મફત છે?',
-                'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'હા, 200 અક્ષર સુધીનું કન્વર્ઝન સંપૂર્ણ મફત છે. અમર્યાદિત ઉપયોગ માટે સસ્તા plans ઉપલબ્ધ છે.'],
+                'name'           => 'Is the Gujarati Font Converter free?',
+                'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'Yes, converting up to 200 characters is completely free. Affordable plans are available for unlimited use.'],
             ],
             [
                 '@type'          => 'Question',
-                'name'           => 'મારો ટેક્સ્ટ સર્વર પર સ્ટોર થાય છે?',
-                'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'ના. કન્વર્ટ થતો ટેક્સ્ટ ક્યારેય સ્ટોર થતો નથી — માત્ર character count આંકડાકીય હેતુ માટે નોંધાય છે.'],
+                'name'           => 'Is my text stored on the server?',
+                'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'No. The text you convert is never stored — only the character count is recorded for statistical purposes.'],
             ],
             [
                 '@type'          => 'Question',
-                'name'           => 'કયા ફોન્ટ સપોર્ટ થાય છે?',
-                'acceptedAnswer' => ['@type' => 'Answer', 'text' => 'LMG, Shree Guj, Saral, Terafont, Akruti, Gujlys, EKLG, Bhasha Bharti, Sulekh, Kruti Dev સહિત 90+ legacy ફોન્ટ.'],
+                'name'           => 'Which fonts are supported?',
+                'acceptedAnswer' => ['@type' => 'Answer', 'text' => '90+ legacy fonts including LMG, Shree Guj, Saral, Terafont, Akruti, Gujlys, EKLG, Bhasha Bharti, Sulekh, and Kruti Dev.'],
             ],
         ],
     ];
@@ -66,7 +66,7 @@ if ($uri !== '/') {
         '@context'        => 'https://schema.org',
         '@type'           => 'BreadcrumbList',
         'itemListElement' => [
-            ['@type' => 'ListItem', 'position' => 1, 'name' => 'હોમ', 'item' => App::url('/')],
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => App::url('/')],
             ['@type' => 'ListItem', 'position' => 2, 'name' => $metaTitle ?? 'Page', 'item' => App::url($uri)],
         ],
     ];

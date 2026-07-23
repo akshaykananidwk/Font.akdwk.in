@@ -1,5 +1,5 @@
 /**
- * ગુજરાતી ફોન્ટ કન્વર્ટર — frontend logic (Vanilla JS, no dependencies).
+ * Gujarati Font Converter — frontend logic (Vanilla JS, no dependencies).
  * AJAX conversion, font search dropdown, copy/clear/download, swap,
  * dark mode, demo counter, keyboard shortcuts, localStorage history.
  */
@@ -29,7 +29,7 @@
     });
   }
 
-  // Converter પેજ નથી? — બાકીનું skip
+  // Not the converter page? — skip the rest
   var legacyBox = $('legacyText');
   var unicodeBox = $('unicodeText');
   if (!legacyBox || !unicodeBox) return;
@@ -50,13 +50,13 @@
     try { localStorage.setItem('gfc_font', JSON.stringify({ slug: slug, name: name })); } catch (e) {}
   }
 
-  // પહેલાની પસંદગી પાછી લાવો; નહીં તો page ના default slug નું નામ બતાવો
+  // Restore previous selection; otherwise show the page's default slug name
   (function initFont() {
     var initial = fontSlugInput.value;
     var stored = null;
     try { stored = JSON.parse(localStorage.getItem('gfc_font') || 'null'); } catch (e) {}
     var items = dropdown.querySelectorAll('.fd-item');
-    // Font-page પર server-set slug પ્રથમ priority
+    // On a font page, the server-set slug takes priority
     for (var i = 0; i < items.length; i++) {
       if (items[i].dataset.slug === initial) {
         fontSearch.value = items[i].dataset.name;
@@ -92,7 +92,7 @@
     var el = $(counterId);
     if (!el) return;
     var len = Array.from(box.value).length; // multibyte-safe
-    el.textContent = len + ' અક્ષર' + (
+    el.textContent = len + ' characters' + (
       !demoState.unlimited && demoState.char_limit
         ? ' / ' + demoState.char_limit : ''
     );
@@ -107,8 +107,8 @@
     if (demoState.unlimited) { demoBar.hidden = true; return; }
     if (demoState.attempts_left === null) return;
     demoBar.hidden = false;
-    demoBarText.textContent = '⚠ DEMO: ' + demoState.char_limit + ' અક્ષરની મર્યાદા. '
-      + demoState.attempts_left + ' પ્રયાસ બાકી.';
+    demoBarText.textContent = '⚠ DEMO: ' + demoState.char_limit + ' character limit. '
+      + demoState.attempts_left + ' attempt(s) left.';
   }
   fetch(baseUrl + '/demo-status', { credentials: 'same-origin' })
     .then(function (r) { return r.json(); })
@@ -131,7 +131,7 @@
     statusEl.className = 'conv-status' + (type ? ' ' + type : '');
   }
 
-  // ---------- History (localStorage, છેલ્લા 5 — ટેક્સ્ટ સર્વર પર જતો નથી) ----------
+  // ---------- History (localStorage, last 5 — text never leaves the browser) ----------
   function saveHistory(input, output, direction) {
     try {
       var hist = JSON.parse(localStorage.getItem('gfc_history') || '[]');
@@ -150,12 +150,12 @@
     var btn = direction === 'legacy_to_unicode' ? $('btnToUnicode') : $('btnToLegacy');
     var text = srcBox.value;
 
-    if (!text.trim()) { setStatus('પહેલા ટેક્સ્ટ લખો કે paste કરો.', 'err'); return; }
-    if (!fontSlugInput.value) { setStatus('ફોન્ટ પસંદ કરો.', 'err'); return; }
+    if (!text.trim()) { setStatus('Please type or paste text first.', 'err'); return; }
+    if (!fontSlugInput.value) { setStatus('Please select a font.', 'err'); return; }
 
     var originalLabel = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> કન્વર્ટ થાય છે...';
+    btn.innerHTML = '<span class="spinner"></span> Converting...';
     setStatus('');
 
     var body = new URLSearchParams();
@@ -175,7 +175,7 @@
         if (json.success) {
           dstBox.value = json.data.converted_text;
           updateCounter(dstBox, dstBox === unicodeBox ? 'counterUnicode' : 'counterLegacy');
-          setStatus('✓ ' + json.data.char_count + ' અક્ષર કન્વર્ટ થયા ('
+          setStatus('✓ Converted ' + json.data.char_count + ' characters ('
             + json.data.processing_time_ms + 'ms) — ' + json.data.font, 'ok');
           saveHistory(text, json.data.converted_text, direction);
           if (json.demo) {
@@ -184,17 +184,17 @@
             refreshDemoBar();
           }
         } else {
-          setStatus('✗ ' + (json.error || 'કન્વર્ઝન ફેલ થયું'), 'err');
+          setStatus('✗ ' + (json.error || 'Conversion failed'), 'err');
         }
       })
-      .catch(function () { setStatus('✗ Network ભૂલ — ફરી પ્રયત્ન કરો.', 'err'); })
+      .catch(function () { setStatus('✗ Network error — please try again.', 'err'); })
       .finally(function () {
         btn.disabled = false;
         btn.innerHTML = originalLabel;
       });
   }
 
-  // ↓ ફોન્ટ(legacy) → Unicode ; ↑ Unicode → ફોન્ટ(legacy)
+  // ↓ Font(legacy) → Unicode ; ↑ Unicode → Font(legacy)
   $('btnToUnicode').addEventListener('click', function () { convert('legacy_to_unicode'); });
   $('btnToLegacy').addEventListener('click', function () { convert('unicode_to_legacy'); });
 
@@ -218,7 +218,7 @@
     if (!text) return;
     var done = function () {
       var old = btn.textContent;
-      btn.textContent = '✓ કૉપી થયું';
+      btn.textContent = '✓ Copied';
       setTimeout(function () { btn.textContent = old; }, 1600);
     };
     if (navigator.clipboard && window.isSecureContext) {

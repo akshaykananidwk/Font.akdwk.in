@@ -1,8 +1,8 @@
 <?php defined('BASE_PATH') or die('Direct access denied'); ?>
 <div class="container">
-  <nav class="breadcrumbs"><a href="<?= Helper::e(App::url('/')) ?>">હોમ</a> <span>›</span> <span>API</span></nav>
+  <nav class="breadcrumbs"><a href="<?= Helper::e(App::url('/')) ?>">Home</a> <span>›</span> <span>API</span></nav>
   <h1>Developer API</h1>
-  <p class="intro">તમારી app, વેબસાઇટ કે workflow માં ફોન્ટ કન્વર્ઝન integrate કરો. API access માટે <a href="<?= Helper::e(App::url('/pricing')) ?>">Pro/Business plan</a> જરૂરી છે — key તમારા <a href="<?= Helper::e(App::url('/dashboard')) ?>">ડેશબોર્ડ</a> માંથી બનાવો.</p>
+  <p class="intro">Integrate font conversion into your app, website, or workflow. API access requires a <a href="<?= Helper::e(App::url('/pricing')) ?>">Pro/Business plan</a> — create your key from your <a href="<?= Helper::e(App::url('/dashboard')) ?>">Dashboard</a>.</p>
 
   <section class="api-section">
     <h2>Endpoint: Convert</h2>
@@ -12,7 +12,7 @@
 Content-Type: application/json</pre>
     <h3>Request Body</h3>
     <pre class="code-block">{
-  "text": "કન્વર્ટ કરવાનો ટેક્સ્ટ",
+  "text": "The text to convert",
   "font": "lmg",
   "direction": "legacy_to_unicode"
 }</pre>
@@ -30,20 +30,20 @@ Content-Type: application/json</pre>
 }</pre>
     <h3>Error Codes</h3>
     <div class="table-wrap"><table class="data-table">
-      <tr><th>Code</th><th>અર્થ</th></tr>
-      <tr><td>400</td><td>Bad request — text/font/direction ખૂટે છે કે અમાન્ય</td></tr>
+      <tr><th>Code</th><th>Meaning</th></tr>
+      <tr><td>400</td><td>Bad request — text/font/direction missing or invalid</td></tr>
       <tr><td>401</td><td>Invalid API key</td></tr>
       <tr><td>403</td><td>Key suspended / IP not allowed / plan expired</td></tr>
-      <tr><td>429</td><td>Rate limit — <code>Retry-After</code> header જુઓ</td></tr>
+      <tr><td>429</td><td>Rate limit — see the <code>Retry-After</code> header</td></tr>
       <tr><td>500</td><td>Server error</td></tr>
     </table></div>
   </section>
 
   <section class="api-section">
-    <h2>અન્ય Endpoints</h2>
-    <pre class="code-block">GET  <?= Helper::e(App::url('/api/v1/fonts')) ?>     — ઉપલબ્ધ ફોન્ટની યાદી
-GET  <?= Helper::e(App::url('/api/v1/usage')) ?>     — તમારો આજનો usage
-POST <?= Helper::e(App::url('/api/v1/batch')) ?>     — એકસાથે અનેક texts (Business plan)</pre>
+    <h2>Other Endpoints</h2>
+    <pre class="code-block">GET  <?= Helper::e(App::url('/api/v1/fonts')) ?>     — list of available fonts
+GET  <?= Helper::e(App::url('/api/v1/usage')) ?>     — your usage for today
+POST <?= Helper::e(App::url('/api/v1/batch')) ?>     — multiple texts at once (Business plan)</pre>
   </section>
 
   <section class="api-section">
@@ -106,7 +106,7 @@ console.log((await res.json()).data.converted_text);</pre>
         </div>
       </div>
       <button class="btn" id="tryBtn">▶ Try it</button>
-      <pre class="code-block" id="tryResult">// response અહીં આવશે</pre>
+      <pre class="code-block" id="tryResult">// response will appear here</pre>
     </div>
   </section>
 </div>

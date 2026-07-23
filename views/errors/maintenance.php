@@ -1,11 +1,11 @@
 <?php defined('BASE_PATH') or die('Direct access denied'); ?>
 <!DOCTYPE html>
-<html lang="gu">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Maintenance — થોડી વારમાં પાછા આવીએ છીએ</title>
+<title>Maintenance — We'll be back shortly</title>
 <style>
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#10161d;color:#e4ebf2;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:20px}
 .box{max-width:460px}
@@ -17,8 +17,8 @@ p{color:#8aa0b5;line-height:1.6}
 <body>
 <div class="box">
   <div class="icon">🔧</div>
-  <h1>થોડી વારમાં પાછા આવીએ છીએ…</h1>
-  <p>સાઇટ પર જરૂરી maintenance/update ચાલી રહ્યું છે.<br>થોડી મિનિટોમાં ફરી પ્રયત્ન કરો. આભાર!</p>
+  <h1>We'll be back shortly…</h1>
+  <p>Essential maintenance/updates are in progress on the site.<br>Please try again in a few minutes. Thank you!</p>
   <p><small>We'll be back shortly — scheduled maintenance in progress.</small></p>
 </div>
 </body>

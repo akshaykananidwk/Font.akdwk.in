@@ -1,21 +1,25 @@
 <?php
 /**
- * ફોન્ટ મેનેજર — CRUD, enable/disable, popular toggle, live test box.
+ * Font Manager — CRUD, enable/disable, popular toggle, live test box.
  */
-$PAGE_TITLE = 'ફોન્ટ મેનેજર';
-require __DIR__ . '/includes/header.php';
 
-$db = Database::getInstance();
-$fontsTable = $db->table('fonts');
-$langTable = $db->table('languages');
-$msg = '';
-$err = '';
-
-// ---- AJAX: live test ----
+/*
+ * AJAX live-test must return pure JSON, so it runs BEFORE includes/header.php
+ * (which would otherwise print the <!DOCTYPE html> admin layout first and break res.json()).
+ */
 if (($_POST['action'] ?? '') === 'live_test') {
+    define('BASE_PATH', dirname(__DIR__));
+    require_once BASE_PATH . '/config/constants.php';
+    require_once CORE_PATH . '/App.php';
+    App::bootstrap();
     header('Content-Type: application/json; charset=utf-8');
+    if (!Auth::isAdminLoggedIn()) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Not authorized']);
+        exit;
+    }
     if (!Security::verifyCsrf()) {
-        echo json_encode(['success' => false, 'error' => 'CSRF']);
+        echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
         exit;
     }
     try {
@@ -31,6 +35,15 @@ if (($_POST['action'] ?? '') === 'live_test') {
     exit;
 }
 
+$PAGE_TITLE = 'Font Manager';
+require __DIR__ . '/includes/header.php';
+
+$db = Database::getInstance();
+$fontsTable = $db->table('fonts');
+$langTable = $db->table('languages');
+$msg = '';
+$err = '';
+
 // ---- POST actions ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
     $action = (string)($_POST['action'] ?? '');
@@ -38,13 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
     try {
         if ($action === 'toggle_active' && $id > 0) {
             $db->query("UPDATE `{$fontsTable}` SET is_active = 1 - is_active WHERE id = ?", [$id]);
-            $msg = 'Status બદલાયું.';
+            $msg = 'Status changed.';
         } elseif ($action === 'toggle_popular' && $id > 0) {
             $db->query("UPDATE `{$fontsTable}` SET is_popular = 1 - is_popular WHERE id = ?", [$id]);
-            $msg = 'Popular flag બદલાયો.';
+            $msg = 'Popular flag changed.';
         } elseif ($action === 'delete' && $id > 0) {
             $db->query("DELETE FROM `{$fontsTable}` WHERE id = ?", [$id]);
-            $msg = 'ફોન્ટ delete થયો (mapping ફાઇલ ડિસ્ક પર રહી છે).';
+            $msg = 'Font deleted (the mapping file remains on disk).';
         } elseif ($action === 'save') {
             $data = [
                 'language_id'  => (int)($_POST['language_id'] ?? 1),
@@ -55,17 +68,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
                 'sort_order'   => (int)($_POST['sort_order'] ?? 0),
             ];
             if ($data['font_name'] === '' || $data['font_slug'] === '' || $data['mapping_file'] === '') {
-                throw new RuntimeException('નામ, slug અને mapping file જરૂરી છે.');
+                throw new RuntimeException('Name, slug, and mapping file are required.');
             }
             if (preg_match('#\.\.|^/#', $data['mapping_file'])) {
-                throw new RuntimeException('અમાન્ય mapping path.');
+                throw new RuntimeException('Invalid mapping path.');
             }
             if ($id > 0) {
                 $db->update('fonts', $data, 'id = ?', [$id]);
-                $msg = 'ફોન્ટ update થયો.';
+                $msg = 'Font updated.';
             } else {
                 $db->insert('fonts', $data);
-                $msg = 'નવો ફોન્ટ ઉમેરાયો.';
+                $msg = 'New font added.';
             }
             Auth::logAdminActivity((int)Session::get('admin_id'), 'save_font', 'fonts', $data);
         }
@@ -93,35 +106,35 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
 
 <div class="admin-grid-2">
   <div class="admin-card">
-    <h2><?= $editFont ? 'ફોન્ટ Edit કરો' : 'નવો ફોન્ટ ઉમેરો' ?></h2>
+    <h2><?= $editFont ? 'Edit Font' : 'Add New Font' ?></h2>
     <form method="post">
       <?= Security::csrfField() ?>
       <input type="hidden" name="action" value="save">
       <input type="hidden" name="id" value="<?= (int)($editFont['id'] ?? 0) ?>">
-      <label>ભાષા</label>
+      <label>Language</label>
       <select name="language_id">
         <?php foreach ($languages as $lang): ?>
           <option value="<?= (int)$lang['id'] ?>" <?= (int)($editFont['language_id'] ?? 1) === (int)$lang['id'] ? 'selected' : '' ?>><?= $e($lang['name']) ?></option>
         <?php endforeach; ?>
       </select>
-      <label>ફોન્ટ નામ</label>
+      <label>Font Name</label>
       <input type="text" name="font_name" value="<?= $e($editFont['font_name'] ?? '') ?>" required>
-      <label>Slug (URL માટે)</label>
+      <label>Slug (for URL)</label>
       <input type="text" name="font_slug" value="<?= $e($editFont['font_slug'] ?? '') ?>" required>
-      <label>Mapping File (દા.ત. gujarati/lmg.json)</label>
+      <label>Mapping File (e.g. gujarati/lmg.json)</label>
       <input type="text" name="mapping_file" value="<?= $e($editFont['mapping_file'] ?? '') ?>" required>
-      <label>Font Family (preview માટે)</label>
+      <label>Font Family (for preview)</label>
       <input type="text" name="font_family" value="<?= $e($editFont['font_family'] ?? '') ?>">
       <label>Sort Order</label>
       <input type="number" name="sort_order" value="<?= (int)($editFont['sort_order'] ?? 0) ?>">
-      <button class="abtn abtn-primary" type="submit">સેવ કરો</button>
+      <button class="abtn abtn-primary" type="submit">Save</button>
       <?php if ($editFont): ?><a class="abtn" href="fonts.php">Cancel</a><?php endif; ?>
     </form>
   </div>
 
   <div class="admin-card">
     <h2>⚡ Live Test</h2>
-    <p class="amuted">કોઈ પણ ફોન્ટની mapping તરત ચકાસો.</p>
+    <p class="amuted">Instantly test any font's mapping.</p>
     <label>Font slug</label>
     <input type="text" id="testSlug" value="lmg">
     <label>Direction</label>
@@ -138,10 +151,10 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
 </div>
 
 <div class="admin-card">
-  <h2>બધા ફોન્ટ (<?= count($fonts) ?>)</h2>
+  <h2>All Fonts (<?= count($fonts) ?>)</h2>
   <form method="get" class="filter-row">
     <select name="lang" onchange="this.form.submit()">
-      <option value="0">બધી ભાષા</option>
+      <option value="0">All Languages</option>
       <?php foreach ($languages as $lang): ?>
         <option value="<?= (int)$lang['id'] ?>" <?= $langFilter === (int)$lang['id'] ? 'selected' : '' ?>><?= $e($lang['name']) ?></option>
       <?php endforeach; ?>
@@ -149,7 +162,7 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
   </form>
   <div class="table-scroll">
     <table class="atable">
-      <tr><th>ID</th><th>નામ</th><th>ભાષા</th><th>Slug</th><th>Mapping</th><th>કન્વર્ઝન</th><th>Popular</th><th>Active</th><th></th></tr>
+      <tr><th>ID</th><th>Name</th><th>Language</th><th>Slug</th><th>Mapping</th><th>Conversions</th><th>Popular</th><th>Active</th><th></th></tr>
       <?php foreach ($fonts as $f): ?>
       <tr>
         <td><?= (int)$f['id'] ?></td>
@@ -173,7 +186,7 @@ if (($editId = (int)($_GET['edit'] ?? 0)) > 0) {
         <td>
           <a class="abtn abtn-xs" href="?edit=<?= (int)$f['id'] ?>">Edit</a>
           <a class="abtn abtn-xs" href="mapping-editor.php?file=<?= urlencode($f['mapping_file']) ?>">Mapping</a>
-          <form method="post" class="inline" onsubmit="return confirm('આ ફોન્ટ delete કરવો?')"><?= Security::csrfField() ?>
+          <form method="post" class="inline" onsubmit="return confirm('Delete this font?')"><?= Security::csrfField() ?>
             <input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int)$f['id'] ?>">
             <button class="abtn abtn-xs abtn-danger" type="submit">Del</button>
           </form>

@@ -1,8 +1,8 @@
 <?php defined('BASE_PATH') or die('Direct access denied'); ?>
 <div class="container narrow">
   <nav class="breadcrumbs">
-    <a href="<?= Helper::e(App::url('/')) ?>">હોમ</a> <span>›</span>
-    <a href="<?= Helper::e(App::url('/blog')) ?>">બ્લોગ</a> <span>›</span>
+    <a href="<?= Helper::e(App::url('/')) ?>">Home</a> <span>›</span>
+    <a href="<?= Helper::e(App::url('/blog')) ?>">Blog</a> <span>›</span>
     <span><?= Helper::e($post['title']) ?></span>
   </nav>
   <article class="page-content">
@@ -20,7 +20,7 @@
 
   <?php if (!empty($related)): ?>
   <aside class="related-posts">
-    <h2 class="h-small">સંબંધિત લેખ</h2>
+    <h2 class="h-small">Related posts</h2>
     <ul>
       <?php foreach ($related as $r): ?>
         <li><a href="<?= Helper::e(App::url('/blog/' . $r['slug'])) ?>"><?= Helper::e($r['title']) ?></a></li>

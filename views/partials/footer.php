@@ -3,27 +3,27 @@
   <div class="container footer-grid">
     <div>
       <h4><?= Helper::e((string)App::setting('site_name', APP_NAME)) ?></h4>
-      <p class="muted">90+ legacy ફોન્ટને Unicode માં કન્વર્ટ કરો — મફત, ઝડપી અને સુરક્ષિત. તમારો ટેક્સ્ટ ક્યારેય સ્ટોર થતો નથી.</p>
+      <p class="muted">Convert 90+ legacy fonts to Unicode — free, fast and secure. Your text is never stored.</p>
     </div>
     <div>
-      <h4>ટૂલ્સ</h4>
-      <a href="<?= Helper::e(App::url('/gujarati-font-converter')) ?>">ગુજરાતી કન્વર્ટર</a>
-      <a href="<?= Helper::e(App::url('/hindi-font-converter')) ?>">હિન્દી કન્વર્ટર</a>
+      <h4>Tools</h4>
+      <a href="<?= Helper::e(App::url('/gujarati-font-converter')) ?>">Gujarati Converter</a>
+      <a href="<?= Helper::e(App::url('/hindi-font-converter')) ?>">Hindi Converter</a>
       <a href="<?= Helper::e(App::url('/lmg-to-unicode-converter')) ?>">LMG → Unicode</a>
       <a href="<?= Helper::e(App::url('/api')) ?>">Developer API</a>
     </div>
     <div>
-      <h4>માહિતી</h4>
+      <h4>Information</h4>
       <a href="<?= Helper::e(App::url('/faq')) ?>">FAQ</a>
-      <a href="<?= Helper::e(App::url('/font-installation-guide')) ?>">ફોન્ટ Installation</a>
-      <a href="<?= Helper::e(App::url('/blog')) ?>">બ્લોગ</a>
-      <a href="<?= Helper::e(App::url('/pricing')) ?>">ભાવ</a>
+      <a href="<?= Helper::e(App::url('/font-installation-guide')) ?>">Font Installation</a>
+      <a href="<?= Helper::e(App::url('/blog')) ?>">Blog</a>
+      <a href="<?= Helper::e(App::url('/pricing')) ?>">Pricing</a>
     </div>
     <div>
-      <h4>કાનૂની</h4>
-      <a href="<?= Helper::e(App::url('/privacy-policy')) ?>">પ્રાઇવસી પોલિસી</a>
-      <a href="<?= Helper::e(App::url('/terms')) ?>">નિયમો</a>
-      <a href="<?= Helper::e(App::url('/contact')) ?>">સંપર્ક</a>
+      <h4>Legal</h4>
+      <a href="<?= Helper::e(App::url('/privacy-policy')) ?>">Privacy Policy</a>
+      <a href="<?= Helper::e(App::url('/terms')) ?>">Terms</a>
+      <a href="<?= Helper::e(App::url('/contact')) ?>">Contact</a>
     </div>
   </div>
   <div class="container footer-bottom">

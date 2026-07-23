@@ -49,9 +49,9 @@ $e = fn($s) => Helper::e((string)$s);
 <div class="admin-topbar">
   <h1><?= $e($PAGE_TITLE) ?></h1>
   <div class="topbar-right">
-    <a href="<?= $e(App::url('/')) ?>" target="_blank" rel="noopener">🌐 સાઇટ જુઓ</a>
+    <a href="<?= $e(App::url('/')) ?>" target="_blank" rel="noopener">🌐 View site</a>
     <span class="admin-user">👤 <?= $e((string)Session::get('admin_username')) ?></span>
-    <a href="logout.php" class="btn-logout">લોગઆઉટ</a>
+    <a href="logout.php" class="btn-logout">Logout</a>
   </div>
 </div>
 <div class="admin-content">

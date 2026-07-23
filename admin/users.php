@@ -2,7 +2,7 @@
 /**
  * યુઝર મેનેજર — CRUD, plan assign, subscription extend, ban.
  */
-$PAGE_TITLE = 'યુઝર્સ';
+$PAGE_TITLE = 'Users';
 require __DIR__ . '/includes/header.php';
 
 $db = Database::getInstance();
@@ -38,16 +38,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && Security::verifyCsrf()) {
                 'starts_at' => $data['subscription_start'] ?? null,
                 'expires_at' => $data['subscription_end'] ?? null,
             ]);
-            $msg = 'Plan assign/extend થયો.';
+            $msg = 'Plan assigned/extended.';
         } elseif ($action === 'toggle_status' && $id > 0) {
             $db->query(
                 "UPDATE `{$usersTable}` SET status = IF(status = 'suspended', 'active', 'suspended') WHERE id = ?",
                 [$id]
             );
-            $msg = 'User status બદલાયો.';
+            $msg = 'User status changed.';
         } elseif ($action === 'delete' && $id > 0) {
             $db->query("DELETE FROM `{$usersTable}` WHERE id = ?", [$id]);
-            $msg = 'User delete થયો.';
+            $msg = 'User deleted.';
         }
         Auth::logAdminActivity((int)Session::get('admin_id'), $action, 'users', ['user_id' => $id]);
     } catch (Throwable $ex) {
@@ -75,12 +75,12 @@ $plans = $db->fetchAll("SELECT * FROM `{$plansTable}` WHERE is_active = 1 ORDER 
 
 <div class="admin-card">
   <form method="get" class="filter-row">
-    <input type="search" name="q" value="<?= $e($search) ?>" placeholder="નામ કે email શોધો...">
-    <button class="abtn" type="submit">શોધો</button>
+    <input type="search" name="q" value="<?= $e($search) ?>" placeholder="Search by name or email...">
+    <button class="abtn" type="submit">Search</button>
   </form>
   <div class="table-scroll">
     <table class="atable">
-      <tr><th>ID</th><th>નામ / Email</th><th>Plan</th><th>Subscription</th><th>Status</th><th>Actions</th></tr>
+      <tr><th>ID</th><th>Name / Email</th><th>Plan</th><th>Subscription</th><th>Status</th><th>Actions</th></tr>
       <?php foreach ($users as $u): ?>
       <tr>
         <td><?= (int)$u['id'] ?></td>
@@ -88,7 +88,7 @@ $plans = $db->fetchAll("SELECT * FROM `{$plansTable}` WHERE is_active = 1 ORDER 
         <td><?= $e($u['plan_name'] ?? '—') ?></td>
         <td>
           <?php if ($u['subscription_end']): ?>
-            <?= date('d M Y', strtotime($u['subscription_end'])) ?> સુધી
+            Until <?= date('d M Y', strtotime($u['subscription_end'])) ?>
             <?= strtotime($u['subscription_end']) > time() ? '✓' : '(expired)' ?>
           <?php else: ?>—<?php endif; ?>
         </td>
@@ -102,14 +102,14 @@ $plans = $db->fetchAll("SELECT * FROM `{$plansTable}` WHERE is_active = 1 ORDER 
                 <option value="<?= (int)$p['id'] ?>" <?= (int)$u['plan_id'] === (int)$p['id'] ? 'selected' : '' ?>><?= $e($p['plan_name']) ?></option>
               <?php endforeach; ?>
             </select>
-            <input type="number" name="days" value="30" style="width:64px" title="દિવસ">
+            <input type="number" name="days" value="30" style="width:64px" title="Days">
             <button class="abtn abtn-xs" type="submit">Assign</button>
           </form>
           <form method="post" class="inline"><?= Security::csrfField() ?>
             <input type="hidden" name="action" value="toggle_status"><input type="hidden" name="id" value="<?= (int)$u['id'] ?>">
             <button class="abtn abtn-xs" type="submit"><?= $u['status'] === 'suspended' ? 'Unban' : 'Ban' ?></button>
           </form>
-          <form method="post" class="inline" onsubmit="return confirm('User delete કરવો?')"><?= Security::csrfField() ?>
+          <form method="post" class="inline" onsubmit="return confirm('Delete this user?')"><?= Security::csrfField() ?>
             <input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int)$u['id'] ?>">
             <button class="abtn abtn-xs abtn-danger" type="submit">Del</button>
           </form>
