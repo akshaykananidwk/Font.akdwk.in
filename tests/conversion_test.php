@@ -6,7 +6,7 @@
  * DB ની જરૂર નથી — engine directly test થાય છે.
  *
  * નોંધ: legacy input strings LMG reference mapping ના glyph codes માં છે
- * (engine/mappings/gujarati/lmg.json). દા.ત. "કમલ" નું legacy સ્વરૂપ "kml" છે.
+ * (engine/mappings/_reference_test.json) — algorithm regression fixture.
  */
 
 define('BASE_PATH', dirname(__DIR__));
@@ -18,7 +18,7 @@ require ENGINE_PATH . '/FontConverter.php';
 
 mb_internal_encoding('UTF-8');
 
-$converter = new FontConverter('gujarati/lmg.json');
+$converter = new FontConverter('_reference_test.json');
 
 $passed = 0;
 $failed = 0;
