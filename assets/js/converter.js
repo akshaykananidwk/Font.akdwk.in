@@ -1,7 +1,7 @@
 /**
  * Gujarati Font Converter — frontend logic (Vanilla JS, no dependencies).
- * AJAX conversion, font search dropdown, copy/clear/download, swap,
- * dark mode, demo counter, keyboard shortcuts, localStorage history.
+ * Dual format pickers (each box selects "Unicode" or a legacy font), AJAX conversion,
+ * auto direction detection, copy/clear, dark mode, demo counters, keyboard shortcuts.
  */
 (function () {
   'use strict';
@@ -9,6 +9,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
   var baseUrl = ((document.querySelector('meta[name="base-url"]') || {}).content || '/').replace(/\/$/, '');
+  var UNICODE = 'unicode';
 
   // ---------- Dark mode ----------
   var themeToggle = $('themeToggle');
@@ -24,67 +25,66 @@
   // ---------- Mobile nav ----------
   var hamburger = $('hamburger');
   if (hamburger) {
-    hamburger.addEventListener('click', function () {
-      $('mainNav').classList.toggle('open');
-    });
+    hamburger.addEventListener('click', function () { $('mainNav').classList.toggle('open'); });
   }
 
   // Not the converter page? — skip the rest
-  var legacyBox = $('legacyText');
-  var unicodeBox = $('unicodeText');
-  if (!legacyBox || !unicodeBox) return;
+  var boxTop = $('boxTop');
+  var boxBottom = $('boxBottom');
+  if (!boxTop || !boxBottom) return;
 
-  var fontSearch = $('fontSearch');
-  var fontSlugInput = $('fontSlug');
-  var dropdown = $('fontDropdown');
   var statusEl = $('convStatus');
   var demoBar = $('demoBar');
   var demoBarText = $('demoBarText');
   var demoState = { unlimited: false, char_limit: 200, attempts_left: null };
 
-  // ---------- Font dropdown (searchable) ----------
-  function selectFont(slug, name) {
-    fontSlugInput.value = slug;
-    fontSearch.value = name;
-    dropdown.classList.remove('open');
-    try { localStorage.setItem('gfc_font', JSON.stringify({ slug: slug, name: name })); } catch (e) {}
+  // ---------- Format pickers (each box: searchable dropdown incl. "Unicode") ----------
+  // Config for each of the two pickers.
+  var pickers = [
+    { search: 'searchTop', value: 'fmtTop', dropdown: 'dropdownTop', box: boxTop, counter: 'counterTop' },
+    { search: 'searchBottom', value: 'fmtBottom', dropdown: 'dropdownBottom', box: boxBottom, counter: 'counterBottom' }
+  ];
+
+  function nameForSlug(dropdownId, slug) {
+    var items = $(dropdownId).querySelectorAll('.fd-item');
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].dataset.slug === slug) return items[i].dataset.name;
+    }
+    return '';
   }
 
-  // Restore previous selection; otherwise show the page's default slug name
-  (function initFont() {
-    var initial = fontSlugInput.value;
-    var stored = null;
-    try { stored = JSON.parse(localStorage.getItem('gfc_font') || 'null'); } catch (e) {}
-    var items = dropdown.querySelectorAll('.fd-item');
-    // On a font page, the server-set slug takes priority
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].dataset.slug === initial) {
-        fontSearch.value = items[i].dataset.name;
-        return;
-      }
-    }
-    if (stored && stored.slug) {
-      for (var j = 0; j < items.length; j++) {
-        if (items[j].dataset.slug === stored.slug) {
-          selectFont(stored.slug, stored.name);
-          return;
-        }
-      }
-    }
-  })();
+  pickers.forEach(function (p) {
+    var searchEl = $(p.search);
+    var valueEl = $(p.value);
+    var dropdownEl = $(p.dropdown);
 
-  fontSearch.addEventListener('focus', function () { dropdown.classList.add('open'); this.select(); });
-  fontSearch.addEventListener('input', function () {
-    var q = this.value.toLowerCase();
-    dropdown.classList.add('open');
-    dropdown.querySelectorAll('.fd-item').forEach(function (item) {
-      item.classList.toggle('hidden', q !== '' && item.dataset.name.toLowerCase().indexOf(q) === -1);
+    // Initialise the visible text from the hidden value
+    searchEl.value = nameForSlug(p.dropdown, valueEl.value) || 'Unicode (Shruti)';
+
+    searchEl.addEventListener('focus', function () { dropdownEl.classList.add('open'); this.select(); });
+    searchEl.addEventListener('input', function () {
+      var q = this.value.toLowerCase();
+      dropdownEl.classList.add('open');
+      dropdownEl.querySelectorAll('.fd-item').forEach(function (item) {
+        item.classList.toggle('hidden', q !== '' && item.dataset.name.toLowerCase().indexOf(q) === -1);
+      });
+    });
+    dropdownEl.addEventListener('click', function (e) {
+      var item = e.target.closest('.fd-item');
+      if (!item) return;
+      valueEl.value = item.dataset.slug;
+      searchEl.value = item.dataset.name;
+      dropdownEl.classList.remove('open');
+      updateCounter(p.box, p.counter);
+      try { localStorage.setItem('gfc_' + p.value, item.dataset.slug); } catch (e) {}
     });
   });
+
+  // Close any open dropdown when clicking outside
   document.addEventListener('click', function (e) {
-    if (!e.target.closest('.font-select-wrap')) dropdown.classList.remove('open');
-    var item = e.target.closest('.fd-item');
-    if (item) selectFont(item.dataset.slug, item.dataset.name);
+    if (!e.target.closest('.fmt-picker')) {
+      document.querySelectorAll('.font-dropdown.open').forEach(function (d) { d.classList.remove('open'); });
+    }
   });
 
   // ---------- Character counters ----------
@@ -92,36 +92,28 @@
     var el = $(counterId);
     if (!el) return;
     var len = Array.from(box.value).length; // multibyte-safe
-    el.textContent = len + ' characters' + (
-      !demoState.unlimited && demoState.char_limit
-        ? ' / ' + demoState.char_limit : ''
-    );
-    el.classList.toggle('limit-near',
-      !demoState.unlimited && demoState.char_limit && len >= demoState.char_limit * 0.9);
+    el.textContent = len + ' characters' + (!demoState.unlimited && demoState.char_limit ? ' / ' + demoState.char_limit : '');
+    el.classList.toggle('limit-near', !demoState.unlimited && demoState.char_limit && len >= demoState.char_limit * 0.9);
   }
-  legacyBox.addEventListener('input', function () { updateCounter(legacyBox, 'counterLegacy'); });
-  unicodeBox.addEventListener('input', function () { updateCounter(unicodeBox, 'counterUnicode'); });
+  boxTop.addEventListener('input', function () { updateCounter(boxTop, 'counterTop'); });
+  boxBottom.addEventListener('input', function () { updateCounter(boxBottom, 'counterBottom'); });
 
   // ---------- Demo status ----------
   function refreshDemoBar() {
     if (demoState.unlimited) { demoBar.hidden = true; return; }
     if (demoState.attempts_left === null) return;
     demoBar.hidden = false;
-    demoBarText.textContent = '⚠ DEMO: ' + demoState.char_limit + ' character limit. '
-      + demoState.attempts_left + ' attempt(s) left.';
+    demoBarText.textContent = '⚠ DEMO: ' + demoState.char_limit + ' character limit. ' + demoState.attempts_left + ' attempt(s) left.';
   }
   fetch(baseUrl + '/demo-status', { credentials: 'same-origin' })
     .then(function (r) { return r.json(); })
     .then(function (json) {
       if (!json.success) return;
       demoState.unlimited = !!json.unlimited;
-      if (!json.unlimited) {
-        demoState.char_limit = json.char_limit;
-        demoState.attempts_left = json.attempts_left;
-      }
+      if (!json.unlimited) { demoState.char_limit = json.char_limit; demoState.attempts_left = json.attempts_left; }
       refreshDemoBar();
-      updateCounter(legacyBox, 'counterLegacy');
-      updateCounter(unicodeBox, 'counterUnicode');
+      updateCounter(boxTop, 'counterTop');
+      updateCounter(boxBottom, 'counterBottom');
     })
     .catch(function () {});
 
@@ -132,26 +124,37 @@
   }
 
   // ---------- History (localStorage, last 5 — text never leaves the browser) ----------
-  function saveHistory(input, output, direction) {
+  function saveHistory(input, output, font, direction) {
     try {
       var hist = JSON.parse(localStorage.getItem('gfc_history') || '[]');
-      hist.unshift({
-        i: input.slice(0, 500), o: output.slice(0, 500),
-        d: direction, f: fontSlugInput.value, t: Date.now()
-      });
+      hist.unshift({ i: input.slice(0, 500), o: output.slice(0, 500), d: direction, f: font, t: Date.now() });
       localStorage.setItem('gfc_history', JSON.stringify(hist.slice(0, 5)));
     } catch (e) {}
   }
 
   // ---------- Conversion (AJAX) ----------
-  function convert(direction) {
-    var srcBox = direction === 'legacy_to_unicode' ? legacyBox : unicodeBox;
-    var dstBox = direction === 'legacy_to_unicode' ? unicodeBox : legacyBox;
-    var btn = direction === 'legacy_to_unicode' ? $('btnToUnicode') : $('btnToLegacy');
+  // fromSide: 'top' or 'bottom'. The other side is the destination.
+  function convert(fromSide) {
+    var srcBox = fromSide === 'top' ? boxTop : boxBottom;
+    var dstBox = fromSide === 'top' ? boxBottom : boxTop;
+    var srcFmt = (fromSide === 'top' ? $('fmtTop') : $('fmtBottom')).value;
+    var dstFmt = (fromSide === 'top' ? $('fmtBottom') : $('fmtTop')).value;
+    var btn = fromSide === 'top' ? $('btnDown') : $('btnUp');
     var text = srcBox.value;
 
     if (!text.trim()) { setStatus('Please type or paste text first.', 'err'); return; }
-    if (!fontSlugInput.value) { setStatus('Please select a font.', 'err'); return; }
+
+    // Decide the legacy font + direction. Exactly one side must be Unicode.
+    var font, direction;
+    if (srcFmt === UNICODE && dstFmt !== UNICODE) {
+      font = dstFmt; direction = 'unicode_to_legacy';
+    } else if (srcFmt !== UNICODE && dstFmt === UNICODE) {
+      font = srcFmt; direction = 'legacy_to_unicode';
+    } else if (srcFmt === UNICODE && dstFmt === UNICODE) {
+      setStatus('Both boxes are set to Unicode — set one side to a legacy font.', 'err'); return;
+    } else {
+      setStatus('Direct font-to-font conversion is not supported. Set one side to Unicode.', 'err'); return;
+    }
 
     var originalLabel = btn.innerHTML;
     btn.disabled = true;
@@ -161,7 +164,7 @@
     var body = new URLSearchParams();
     body.append('csrf_token', csrfToken);
     body.append('text', text);
-    body.append('font', fontSlugInput.value);
+    body.append('font', font);
     body.append('direction', direction);
 
     fetch(baseUrl + '/convert', {
@@ -174,37 +177,25 @@
       .then(function (json) {
         if (json.success) {
           dstBox.value = json.data.converted_text;
-          updateCounter(dstBox, dstBox === unicodeBox ? 'counterUnicode' : 'counterLegacy');
-          setStatus('✓ Converted ' + json.data.char_count + ' characters ('
-            + json.data.processing_time_ms + 'ms) — ' + json.data.font, 'ok');
-          saveHistory(text, json.data.converted_text, direction);
-          if (json.demo) {
-            demoState.attempts_left = json.demo.attempts_left;
-            demoState.char_limit = json.demo.char_limit;
-            refreshDemoBar();
-          }
+          updateCounter(dstBox, dstBox === boxTop ? 'counterTop' : 'counterBottom');
+          setStatus('✓ Converted ' + json.data.char_count + ' characters (' + json.data.processing_time_ms + 'ms) — ' + json.data.font, 'ok');
+          saveHistory(text, json.data.converted_text, font, direction);
+          if (json.demo) { demoState.attempts_left = json.demo.attempts_left; demoState.char_limit = json.demo.char_limit; refreshDemoBar(); }
         } else {
           setStatus('✗ ' + (json.error || 'Conversion failed'), 'err');
         }
       })
       .catch(function () { setStatus('✗ Network error — please try again.', 'err'); })
-      .finally(function () {
-        btn.disabled = false;
-        btn.innerHTML = originalLabel;
-      });
+      .finally(function () { btn.disabled = false; btn.innerHTML = originalLabel; });
   }
 
-  // ↓ Font(legacy) → Unicode ; ↑ Unicode → Font(legacy)
-  $('btnToUnicode').addEventListener('click', function () { convert('legacy_to_unicode'); });
-  $('btnToLegacy').addEventListener('click', function () { convert('unicode_to_legacy'); });
+  $('btnDown').addEventListener('click', function () { convert('top'); });
+  $('btnUp').addEventListener('click', function () { convert('bottom'); });
 
   // ---------- Copy / Clear ----------
   document.addEventListener('click', function (e) {
     var copyBtn = e.target.closest('[data-copy]');
-    if (copyBtn) {
-      var box = $(copyBtn.dataset.copy);
-      copyToClipboard(box.value, copyBtn);
-    }
+    if (copyBtn) { copyToClipboard($(copyBtn.dataset.copy).value, copyBtn); }
     var clearBtn = e.target.closest('[data-clear]');
     if (clearBtn) {
       var cbox = $(clearBtn.dataset.clear);
@@ -239,13 +230,10 @@
 
   // ---------- Keyboard shortcuts ----------
   document.addEventListener('keydown', function (e) {
-    if (e.ctrlKey && e.key === 'Enter') {
-      e.preventDefault();
-      convert('legacy_to_unicode');
-    }
+    if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); convert('top'); }
     if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
       e.preventDefault();
-      copyToClipboard(unicodeBox.value, document.querySelector('[data-copy="unicodeText"]'));
+      copyToClipboard(boxBottom.value, document.querySelector('[data-copy="boxBottom"]'));
     }
   });
 })();

@@ -20,59 +20,69 @@ $selectedSlug = $selectedSlug ?? '';
   <p class="intro"><?= $e($introText ?? '') ?></p>
 
   <section class="converter-card" aria-label="Font Converter">
-    <?php // hidden — gives JS the font slug + direction for each box ?>
-    <input type="hidden" id="fontSlug" value="<?= $e($selectedSlug ?: 'lmg') ?>">
+    <?php
+    /* Both boxes get an identical searchable picker: "Unicode" + every legacy font.
+       Convert direction is decided automatically from the two selections
+       (exactly one side must be Unicode, the other a legacy font). */
+    $renderFmtItems = function () use ($e, $popularFonts, $fonts) {
+        echo '<div class="fd-group">Format</div>';
+        echo '<div class="fd-item" role="option" data-slug="unicode" data-name="Unicode (Shruti)">Unicode (Shruti)</div>';
+        if ($popularFonts) {
+            echo '<div class="fd-group">⭐ Popular fonts</div>';
+            foreach ($popularFonts as $f) {
+                printf('<div class="fd-item" role="option" data-slug="%s" data-name="%s">%s</div>',
+                    $e($f['font_slug']), $e($f['font_name']), $e($f['font_name']));
+            }
+        }
+        echo '<div class="fd-group">All fonts</div>';
+        foreach ($fonts as $f) {
+            printf('<div class="fd-item" role="option" data-slug="%s" data-name="%s">%s</div>',
+                $e($f['font_slug']), $e($f['font_name']), $e($f['font_name']));
+        }
+    };
+    ?>
 
-    <?php /* ---- Box 1 (top): Non-Unicode / Legacy font ---- */ ?>
+    <?php /* ---- Box 1 (top): defaults to the legacy font ---- */ ?>
     <div class="conv-box">
       <div class="conv-box-head">
-        <div class="box-selector font-select-wrap">
-          <span class="box-lang">Font:</span>
-          <input type="text" id="fontSearch" placeholder="Select a font... (e.g. LMG)" autocomplete="off"
-                 aria-label="Select a font" value="">
-          <div class="font-dropdown" id="fontDropdown" role="listbox">
-            <?php if ($popularFonts): ?>
-            <div class="fd-group">⭐ Popular</div>
-            <?php foreach ($popularFonts as $f): ?>
-              <div class="fd-item" role="option" data-slug="<?= $e($f['font_slug']) ?>" data-name="<?= $e($f['font_name']) ?>"><?= $e($f['font_name']) ?></div>
-            <?php endforeach; ?>
-            <?php endif; ?>
-            <div class="fd-group">All Fonts</div>
-            <?php foreach ($fonts as $f): ?>
-              <div class="fd-item" role="option" data-slug="<?= $e($f['font_slug']) ?>" data-name="<?= $e($f['font_name']) ?>"><?= $e($f['font_name']) ?></div>
-            <?php endforeach; ?>
-          </div>
+        <div class="box-selector fmt-picker">
+          <span class="box-lang">From:</span>
+          <input type="text" class="fmt-search" id="searchTop" placeholder="Select font / Unicode..." autocomplete="off" aria-label="Top box format" value="">
+          <input type="hidden" class="fmt-value" id="fmtTop" value="<?= $e($selectedSlug ?: 'lmg') ?>">
+          <div class="font-dropdown" id="dropdownTop" role="listbox"><?php $renderFmtItems(); ?></div>
         </div>
-        <span class="char-counter" id="counterLegacy">0 characters</span>
+        <span class="char-counter" id="counterTop">0 characters</span>
       </div>
-      <textarea id="legacyText" dir="ltr" spellcheck="false"
-        placeholder="Type or paste your legacy (non-Unicode) font text here..." aria-label="Legacy text"></textarea>
+      <textarea id="boxTop" dir="ltr" spellcheck="false"
+        placeholder="Type or paste your text here..." aria-label="Top text"></textarea>
       <div class="conv-actions">
-        <button class="btn-sm" data-copy="legacyText">📋 Copy</button>
-        <button class="btn-sm" data-clear="legacyText">✖ Clear</button>
+        <button class="btn-sm" data-copy="boxTop">📋 Copy</button>
+        <button class="btn-sm" data-clear="boxTop">✖ Clear</button>
       </div>
     </div>
 
     <?php /* ---- Between: two directional convert buttons ---- */ ?>
     <div class="convert-btns-mid">
-      <button class="btn conv-dir" id="btnToUnicode" title="Font → Unicode">↓ Convert to Unicode</button>
-      <button class="btn conv-dir btn-secondary" id="btnToLegacy" title="Unicode → Font">↑ Convert to Font</button>
+      <button class="btn conv-dir" id="btnDown" title="Convert top box to bottom box">↓ Convert</button>
+      <button class="btn conv-dir btn-secondary" id="btnUp" title="Convert bottom box to top box">↑ Convert</button>
     </div>
 
-    <?php /* ---- Box 2 (bottom): Unicode (Shruti) ---- */ ?>
+    <?php /* ---- Box 2 (bottom): defaults to Unicode ---- */ ?>
     <div class="conv-box">
       <div class="conv-box-head">
-        <div class="box-selector">
-          <span class="box-lang">Gujarati</span>
-          <span class="fmt-fixed">Unicode (Shruti)</span>
+        <div class="box-selector fmt-picker">
+          <span class="box-lang">To:</span>
+          <input type="text" class="fmt-search" id="searchBottom" placeholder="Select font / Unicode..." autocomplete="off" aria-label="Bottom box format" value="">
+          <input type="hidden" class="fmt-value" id="fmtBottom" value="unicode">
+          <div class="font-dropdown" id="dropdownBottom" role="listbox"><?php $renderFmtItems(); ?></div>
         </div>
-        <span class="char-counter" id="counterUnicode">0 characters</span>
+        <span class="char-counter" id="counterBottom">0 characters</span>
       </div>
-      <textarea id="unicodeText" dir="ltr" spellcheck="false" lang="gu"
-        placeholder="Unicode result appears here... (you can also type Unicode on your phone and paste it here)" aria-label="Unicode text"></textarea>
+      <textarea id="boxBottom" dir="ltr" spellcheck="false" lang="gu"
+        placeholder="Result appears here... (you can also type Unicode on your phone and paste it here)" aria-label="Bottom text"></textarea>
       <div class="conv-actions">
-        <button class="btn-sm" data-copy="unicodeText">📋 Copy</button>
-        <button class="btn-sm" data-clear="unicodeText">✖ Clear</button>
+        <button class="btn-sm" data-copy="boxBottom">📋 Copy</button>
+        <button class="btn-sm" data-clear="boxBottom">✖ Clear</button>
       </div>
     </div>
 
