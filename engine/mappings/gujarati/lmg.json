@@ -1,9 +1,9 @@
 {
     "font_name": "LMG Arun",
     "language": "gujarati",
-    "version": "2.1",
+    "version": "2.2",
     "direction": "both",
-    "_note": "Real LMG-Arun codes derived from two owner-verified specimens. Chhoti-i (િ) is stored before the consonant; reph (\") after the syllable. Gujarati digits are reverse-only (Unicode->LMG) because their codes overlap letter codes.",
+    "_note": "Real LMG-Arun codes from three owner-verified specimens.",
     "pre_process": [],
     "reorder_rules": {
         "matra_i_prefix": [
@@ -21,7 +21,8 @@
         },
         "2_char": {
             "V[": "એ",
-            "V{": "ઐ"
+            "V{": "ઐ",
+            "þF": "ન્ન"
         },
         "1_char": {
             "S": "ક",
@@ -31,11 +32,13 @@
             "R": "ચ",
             "K": "છ",
             "H": "જ",
+            "h": "ઝ",
             "8": "ટ",
             "9": "ઠ",
             "0": "ડ",
             "-": "ઢ",
             "6": "ણ",
+            "ª": "ણુ",
             "T": "ત",
             "Y": "થ",
             "N": "દ",
@@ -43,6 +46,7 @@
             "G": "ન",
             "5": "પ",
             "O": "ફ",
+            "A": "બ",
             "E": "ભ",
             "D": "મ",
             "I": "ય",
@@ -50,24 +54,34 @@
             ",": "લ",
             "/": "ળ",
             "J": "વ",
+            "X": "શ",
             "Ø": "ષ",
             ";": "સ",
             "C": "હ",
             "u": "ગ્",
+            "Q": "ષ્",
+            "`": "શ્",
             "Ù": "ક્ષ",
             "7": "જ્ઞ",
             "+": "ત્ર",
             "z": "શ્ર",
             "n": "દ્ય",
+            "£": "દ્વ",
+            "â": "દ્ધ",
+            "É": "ક્ત",
+            "Ú": "ષ્ટ",
             "F": "ા",
             "L": "ી",
             "l": "િ",
+            "Â": "િ",
             "]": "ુ",
             "}": "ૂ",
             "[": "ે",
             "{": "ૈ",
             "M": "ો",
             "Á": "ૌ",
+            "'": "ૃ",
+            "Ï": "દૃ",
             "\\": "ં",
             "o": "ઃ",
             "V": "અ",
@@ -75,15 +89,28 @@
             "ç": "ઈં",
             "\"": "ર્",
             "|": "્ર",
+            "=": "્ર",
             "P": ".",
             "4": ",",
             "m": "?",
-            "v": "—"
+            "v": "—",
+            ":": "સ્"
         }
     },
     "post_process": [],
     "reverse_pre_process": [],
-    "reverse_post_process": [],
+    "reverse_post_process": [
+        {
+            "find": "l([\\x{00C9}:\\x{00DA}`Q])",
+            "replace": "Â$1",
+            "regex": true
+        },
+        {
+            "find": "\\x{00DA}\\|",
+            "replace": "Ú=",
+            "regex": true
+        }
+    ],
     "reverse_exceptions": {
         "૦": "_",
         "૧": "!",
