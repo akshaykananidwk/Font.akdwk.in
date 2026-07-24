@@ -1,53 +1,100 @@
 {
-  "font_name": "LMG Arun",
-  "language": "gujarati",
-  "version": "2.0",
-  "direction": "both",
-  "_note": "Real LMG-Arun glyph codes, seeded from a verified specimen supplied by the site owner. Matras ા/ી/ુ/ે/ો are stored AFTER the consonant (no reordering). Half-consonant forms use lowercase codes (e.g. ગ્ = 'u'). Punctuation is remapped (Unicode '.' = legacy 'P'; legacy '.' = ઈ). More letters to be added as further specimens are confirmed.",
-  "pre_process": [],
-  "reorder_rules": {
-    "matra_i_prefix": ["િ"],
-    "reph_chars": ["ર્"],
-    "halant": "્"
-  },
-  "mappings": {
-    "3_char": {
-      "VF[": "ઓ"
+    "font_name": "LMG Arun",
+    "language": "gujarati",
+    "version": "2.1",
+    "direction": "both",
+    "_note": "Real LMG-Arun codes derived from two owner-verified specimens. Chhoti-i (િ) is stored before the consonant; reph (\") after the syllable. Gujarati digits are reverse-only (Unicode->LMG) because their codes overlap letter codes.",
+    "pre_process": [],
+    "reorder_rules": {
+        "matra_i_prefix": [
+            "િ"
+        ],
+        "reph_chars": [
+            "ર્"
+        ],
+        "halant": "્"
     },
-    "2_char": {
-      "V[": "એ"
+    "mappings": {
+        "3_char": {
+            "VF[": "ઓ",
+            "VF{": "ઔ"
+        },
+        "2_char": {
+            "V[": "એ",
+            "V{": "ઐ"
+        },
+        "1_char": {
+            "S": "ક",
+            "B": "ખ",
+            "U": "ગ",
+            "3": "ઘ",
+            "R": "ચ",
+            "K": "છ",
+            "H": "જ",
+            "8": "ટ",
+            "9": "ઠ",
+            "0": "ડ",
+            "-": "ઢ",
+            "6": "ણ",
+            "T": "ત",
+            "Y": "થ",
+            "N": "દ",
+            "W": "ધ",
+            "G": "ન",
+            "5": "પ",
+            "O": "ફ",
+            "E": "ભ",
+            "D": "મ",
+            "I": "ય",
+            "Z": "ર",
+            ",": "લ",
+            "/": "ળ",
+            "J": "વ",
+            "Ø": "ષ",
+            ";": "સ",
+            "C": "હ",
+            "u": "ગ્",
+            "Ù": "ક્ષ",
+            "7": "જ્ઞ",
+            "+": "ત્ર",
+            "z": "શ્ર",
+            "n": "દ્ય",
+            "F": "ા",
+            "L": "ી",
+            "l": "િ",
+            "]": "ુ",
+            "}": "ૂ",
+            "[": "ે",
+            "{": "ૈ",
+            "M": "ો",
+            "Á": "ૌ",
+            "\\": "ં",
+            "o": "ઃ",
+            "V": "અ",
+            ".": "ઈ",
+            "ç": "ઈં",
+            "\"": "ર્",
+            "|": "્ર",
+            "P": ".",
+            "4": ",",
+            "m": "?",
+            "v": "—"
+        }
     },
-    "1_char": {
-      "S": "ક",
-      "B": "ખ",
-      "U": "ગ",
-      "R": "ચ",
-      "K": "છ",
-      "H": "જ",
-      "6": "ણ",
-      "Y": "થ",
-      "W": "ધ",
-      "G": "ન",
-      "5": "પ",
-      "D": "મ",
-      "I": "ય",
-      "Z": "ર",
-      "/": "ળ",
-      ",": "લ",
-      "0": "ડ",
-      "u": "ગ્",
-      "V": "અ",
-      "F": "ા",
-      "L": "ી",
-      "]": "ુ",
-      "[": "ે",
-      "M": "ો",
-      ".": "ઈ",
-      "P": "."
+    "post_process": [],
+    "reverse_pre_process": [],
+    "reverse_post_process": [],
+    "reverse_exceptions": {
+        "૦": "_",
+        "૧": "!",
+        "૨": "Z",
+        "૩": "#",
+        "૪": "$",
+        "૫": "5",
+        "૬": "&",
+        "૭": "*",
+        "૮": "(",
+        "૯": ")",
+        ":": "o"
     }
-  },
-  "post_process": [],
-  "reverse_pre_process": [],
-  "reverse_post_process": [],
-  "reverse_exceptions": {}
 }
